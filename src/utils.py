@@ -9,7 +9,7 @@ def linear_to_db(linear: np.ndarray[float]) -> np.ndarray[float]:
 
 def config_plot(ax, polar: bool) -> None:
     if polar:
-        ax.set_theta_zero_location('N')
+        ax.set_theta_zero_location('W')
         ax.set_theta_direction(-1)
         ax.set_thetalim(-np.pi, np.pi)
     else:

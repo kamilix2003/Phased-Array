@@ -28,7 +28,7 @@ array = AntennaArray(
     name='Array1',
     antenna=element1,
     num_elements=4,
-    spacing=wavelength(frequency) * 0.25  # Spacing in meters
+    spacings=wavelength(frequency) * 0.25  # Spacing in meters
 )
 
 beta = 0
