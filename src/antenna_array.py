@@ -6,19 +6,26 @@ from antenna_element import AntennaElement
       
 class AntennaArray:
 
-    def __init__(self, name: str, antenna: AntennaElement, num_elements: int, spacings: np.ndarray[float]) -> None:
+    # TODO: consider ODD and EVEN number of elements
+
+    def __init__(self, name: str,
+                 antenna: AntennaElement,
+                 num_elements: int,
+                 spacings: np.ndarray[float],
+                 weights: np.ndarray) -> None:
         self.name: str = name
         self.antenna: AntennaElement = antenna
         self.num_elements: int = num_elements
         self.spacings: np.ndarray[float] = spacings
+        self.weights: np.ndarray[float] = weights
         
     def psi(self, frequency: float, theta: np.ndarray[float], beta: float) -> np.ndarray[float, float]:
         k = 2 * np.pi * frequency / c
-        return k * self.spacings[:, np.newaxis] * np.cos(theta) + beta * np.arange(self.num_elements)[:, np.newaxis]
+        return k * self.spacings[:, np.newaxis] * np.sin(theta) + beta * np.arange(self.num_elements)[:, np.newaxis]
     
     def array_factor(self, frequency: float, theta: np.ndarray[float], beta: float) -> np.ndarray[complex]:
         phase_shifts = self.psi(frequency, theta, beta)
-        array_response = np.exp(1j * phase_shifts)
+        array_response = self.weights[:, np.newaxis] * np.exp(1j * phase_shifts)
         return np.sum(array_response, axis=0) / self.num_elements
         
     def radiation_pattern(self, frequency: float, theta: np.ndarray[float], beta: float) -> np.ndarray[complex]:
@@ -36,7 +43,7 @@ if __name__ == "__main__":
     from antenna_array import AntennaArray
     from utils import wavelength, linear_to_db, config_plot
 
-    N = 1000
+    N = 360
     theta = np.linspace(-np.pi, np.pi, N)
     frequency = 2.4e9  # Frequency in Hz
 
@@ -44,8 +51,8 @@ if __name__ == "__main__":
         name='Pattern1',
         frequency=frequency,
         theta=theta,
-        # pattern=np.cos(theta/2 + np.pi/4)**2  # Example pattern
-        pattern=np.sinc(theta - np.pi/2)**2  # Example pattern
+        pattern=np.cos(theta/2)**2  # Example pattern
+        # pattern=np.sinc(theta - np.pi/2)**2  # Example pattern
     )
 
     element1 = AntennaElement(
@@ -57,14 +64,15 @@ if __name__ == "__main__":
         name='Array1',
         antenna=element1,
         num_elements=4,
-        spacings=wavelength(frequency) * np.array([-.6, -.2, .2, .6])
+        spacings=wavelength(frequency) * np.array([-.6, -.2, .2, .6]),
+        weights=np.array([.5, 1, 1, .5])
     )
 
     beta = 0
 
-    af = array.array_factor(frequency, theta, beta)
+    af = array.array_factor(frequency*1.3, theta, beta)
 
-    E = array.radiation_pattern(frequency, theta, beta)
+    E = array.radiation_pattern(frequency*1.3, theta, beta)
 
     fig = plt.figure(figsize=(10, 6))
     polar = True
