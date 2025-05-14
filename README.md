@@ -1,8 +1,1 @@
-# Phased Array Antenna
-
-
-
-- NumPy
-- SciPy
-- Matplotlib
-- Numba
+# Phased Antenna Array 

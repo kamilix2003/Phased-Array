@@ -30,5 +30,3 @@ class AntennaDesigner:
         L = (1 / (2 * self.frequency * np.sqrt(eps_reff * mu_0 * epsilon_0))) - 2 * delta_L
         return L
     
-a = AntennaDesigner(2.2, 2.4e9, 200e-6)
-print(a.width()*1e3, a.length()*1e3)
