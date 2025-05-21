@@ -2,122 +2,66 @@
 import numpy as np
 from scipy.constants import c
 
-from antenna_element import AntennaElement
-      
 class AntennaArray:
 
     def __init__(self, name: str,
-                 antenna: AntennaElement,
                  num_elements: int,
                  spacings: np.ndarray[float],
                  weights: np.ndarray) -> None:
         self.name: str = name
-        self.antenna: AntennaElement = antenna
         self.num_elements: int = num_elements
         self.spacings: np.ndarray[float] = spacings
         self.weights: np.ndarray[float] = weights
         
-    def psi(self, frequency: float, theta: np.ndarray[float], beta: np.ndarray[float]) -> np.ndarray[float, float]:
-        if self.num_elements != len(beta):
-            raise ValueError(f"Number of elements {self.num_elements} does not match the length of beta {len(beta)}")
-        if self.num_elements != len(self.spacings):
-            raise ValueError(f"Number of elements {self.num_elements} does not match the length of spacings {len(self.spacings)}")
-        
-        k = 2 * np.pi * frequency / c
-        
-        return k * self.spacings[:, np.newaxis] * np.sin(theta) + beta[:, np.newaxis]
+def phase_shift(array: AntennaArray, frequency: float, theta: np.ndarray[float], beta: np.ndarray[float]) -> np.ndarray[float, float]:
+    if array.num_elements != len(beta):
+        raise ValueError(f"Number of elements {array.num_elements} does not match the length of beta {len(beta)}")
+    if array.num_elements != len(array.spacings):
+        raise ValueError(f"Number of elements {array.num_elements} does not match the length of spacings {len(array.spacings)}")
     
-    def array_factor(self, frequency: float, theta: np.ndarray[float], beta: np.ndarray[float]) -> np.ndarray[complex]:
-        if self.num_elements != len(self.weights):
-            raise ValueError(f"Number of elements {self.num_elements} does not match the length of weights {len(self.weights)}")
-        
-        phase_shifts = self.psi(frequency, theta, beta)
-        array_response = self.weights[:, np.newaxis] * np.exp(1j * phase_shifts)
-        return np.sum(array_response, axis=0) / self.num_elements
-        
-    def radiation_pattern(self, frequency: float, theta: np.ndarray[float], beta: float) -> np.ndarray[complex]:
-        return self.array_factor(frequency, theta, beta) * self.antenna.patterns[0].pattern
+    return 2 * np.pi * frequency / c * array.spacings[:, np.newaxis] * np.sin(theta) + beta[:, np.newaxis]
 
-def equal_spacing(num_elements: int, spacing: float) -> np.ndarray[float]:
+def array_factor(array: AntennaArray, frequency: float, theta: np.ndarray[float], beta: np.ndarray[float]) -> np.ndarray[complex]:
+    if array.num_elements != len(array.weights):
+        raise ValueError(f"Number of elements {array.num_elements} does not match the length of weights {len(array.weights)}")
+    
+    array_response = array.weights[:, np.newaxis] * np.exp(1j * phase_shift(array, frequency, theta, beta))
+    return np.sum(array_response, axis=0) / array.num_elements
+
+def uniform_spacing(num_elements: int, spacing: float) -> np.ndarray[float]:
     if num_elements % 2 == 0:
         return np.linspace(-num_elements/2, num_elements/2, num_elements) * spacing
     else:
         return np.linspace(-(num_elements + spacing)/2, (num_elements + spacing)/2, num_elements) * spacing
 
-def plot_array(array: AntennaArray,
-               array_factor: np.ndarray[float],
-               pattern: np.ndarray[float],
-               polar: bool = True):
-    
-    theta = array.antenna.patterns[0].theta
-    
-    fig = plt.figure(figsize=(10, 6))
-    
-    ax1 = plt.subplot(131, polar=polar)
-    config_plot(ax1, polar)
-    plt.plot(theta, linear_to_db(np.abs(array_factor)), label='Array Factor')
-    plt.title('Array Factor')
-
-    ax2 = plt.subplot(132, polar=polar)
-    config_plot(ax2, polar)
-    plt.plot(theta, linear_to_db(pattern1.pattern), label='Element Pattern')
-    plt.title('Element Pattern')
-
-    ax3 = plt.subplot(133, polar=polar)
-    config_plot(ax3, polar)
-    plt.plot(theta, linear_to_db(np.abs(pattern)), label='Radiation Pattern')
-    plt.plot(theta, np.abs(E), label='Radiation Pattern')
-    plt.title('Antenna Array Pattern')
-    
-    plt.show()
-    
-    return fig, ax1, ax2, ax3
-
-        
+def beam_direction(array: AntennaArray, frequency: float, angle: float) -> np.ndarray[float]:
+    beta = np.linspace(0, array.num_elements - 1, array.num_elements) * angle
+    return beta
+       
 if __name__ == "__main__":
-    import numpy as np
     import matplotlib.pyplot as plt
-    from scipy.constants import c
-
-    from antenna_element import AntennaElement
-    from radiation_pattern import RadiationPattern
-    from antenna_array import AntennaArray
-    from utils import wavelength, linear_to_db, config_plot
-
-    N = 360
-    theta = np.linspace(-np.pi, np.pi, N)
-    frequency = 2.4e9  # Frequency in Hz
+    from utils import wavelength
+    
+    # Example usage
     num_elements = 4
-
-    pattern1 = RadiationPattern(
-        name='Pattern1',
-        frequency=frequency,
-        theta=theta,
-        pattern=np.cos(theta/2)**2  # Example pattern
-        # pattern=np.sinc(theta - np.pi/2)**2  # Example pattern
-    )
-
-    element1 = AntennaElement(
-        name='Element1',
-        patterns=np.array([pattern1])
-    )
-
-    spacing = wavelength(frequency) / 4
-    array = AntennaArray(
-        name='Array1',
-        antenna=element1,
-        num_elements=num_elements,
-        spacings=equal_spacing(num_elements, spacing),
-        weights=np.ones(num_elements)  # Uniform weights
-    )
+    frequency = 2.4e9  # 1 GHz
+    spacing = 0.3 * wavelength(frequency)
+    theta = np.linspace(-np.pi/2, np.pi/2, 360)
     
-    print(array.spacings)
+    spacings = uniform_spacing(num_elements, spacing)
+    weights = np.ones(num_elements)  # Uniform weights
     
-    beta = np.zeros(num_elements)  # Phase shifts for each element
-
-    af = array.array_factor(frequency, theta, beta)
-
-    E = array.radiation_pattern(frequency, theta, beta)
-
-    fig, ax1, ax2, ax3 = plot_array(array, af, E, polar=False)
+    antenna_array = AntennaArray("Uniform Linear Array", num_elements, spacings, weights)
+    angles = np.arange(0, 2*np.pi, np.radians(22.5))
     
+    plt.figure(figsize=(10, 6))
+    
+    for angle in angles:
+        beta = beam_direction(antenna_array, frequency, angle)
+        array_response = array_factor(antenna_array, frequency, theta, beta)
+        
+        plt.plot(theta, np.abs(array_response), label=f'Array Factor for angle {np.degrees(angle):.2f}')
+    
+    plt.title('Antenna Array Pattern')
+    plt.legend()
+    plt.show()

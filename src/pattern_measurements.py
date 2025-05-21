@@ -30,7 +30,6 @@ def HPBW(pattern : np.ndarray[float], theta: np.ndarray[float], beta: float) -> 
     arg_HP_right = np.argmin(np.abs(pattern[::-1] - HP_threshold))
     print(arg_HP_left, arg_HP_right)
     return np.abs(theta[arg_HP_left] - theta[arg_HP_right]), arg_HP_left, arg_HP_right
-    pass
 
 def FSLBW(pattern : np.ndarray[float], theta: np.ndarray[float], beta: float) -> tuple[float, int, int]:
     arg_maximas = find_maximas(pattern)
@@ -38,7 +37,6 @@ def FSLBW(pattern : np.ndarray[float], theta: np.ndarray[float], beta: float) ->
     arg_first_max_left ,arg_first_max_right = _find_left_right_nulls(arg_maximas, arg_main_lobe)
     
     return np.abs(theta[arg_first_max_left] - theta[arg_first_max_right]), arg_first_max_left, arg_first_max_right
-    pass
     
     
 if __name__ == "__main__":
