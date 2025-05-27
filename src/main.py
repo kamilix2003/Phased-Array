@@ -1,69 +1,66 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from scipy.constants import c
 
-from antenna_element import AntennaElement
-from radiation_pattern import RadiationPattern
-from antenna_array import AntennaArray
+
+import antenna_array as aa
+from pattern_measurements import FNBW, HPBW, FSLBW
 from utils import wavelength, linear_to_db, config_plot
 
-N = 1000
+N = 360
 theta = np.linspace(-np.pi, np.pi, N)
 frequency = 2.4e9  # Frequency in Hz
 
-pattern1 = RadiationPattern(
-    name='Pattern1',
-    frequency=frequency,
-    theta=theta,
-    # pattern=np.cos(theta/2 + np.pi/4)**2  # Example pattern
-    pattern=np.sinc(theta - np.pi/2)**2  # Example pattern
-)
+pattern = np.abs(np.sinc(theta * 2))  # Example pattern
 
-element1 = AntennaElement(
-    name='Element1',
-    patterns=np.array([pattern1])
-)
+lambda_spacing =  np.linspace(0.1, 1.1, 10)
+# angles = np.arange(-np.pi/4, np.pi/4, np.radians(22.5))  # Angles in radians
+# angles = np.array([ -np.pi/4, 0, np.pi/4])
+angles = np.linspace(-np.pi, np.pi, 36)  # Angles in radians
 
-array = AntennaArray(
-    name='Array1',
-    antenna=element1,
-    num_elements=4,
-    spacings=wavelength(frequency) * 0.25  # Spacing in meters
-)
-
-beta = 0
-
-af = array.array_factor(frequency, theta, beta)
-
-E = array.radiation_pattern(frequency, theta, beta)
-
-fig = plt.figure(figsize=(10, 6))
-polar = True
-ax = plt.subplot(131, polar = polar)
-config_plot(ax, polar)
-plt.plot(theta, linear_to_db(np.abs(af)), label='Array Factor')
-plt.title('Array Factor')
-
-ax = plt.subplot(132, polar = polar)
-config_plot(ax, polar)
-plt.plot(pattern1.theta, linear_to_db(pattern1.pattern), label='Element Pattern')
-plt.title('Element Pattern')
-
-ax = plt.subplot(133, polar = polar)
-config_plot(ax, polar)
-plt.plot(theta, linear_to_db(np.abs(E)), label='Radiation Pattern')
-plt.plot(theta, np.abs(E), label='Radiation Pattern')
-plt.title('Antenna Array Pattern')
-
-from pattern_measurements import find_maximas, find_nulls
-
-i = find_nulls(np.abs(E))
-j = find_maximas(np.abs(E))
-print(i, j)
-plt.plot(theta[j], linear_to_db(np.abs(E[j])), 'go', label='Maximas')
-
-for k in i:
-    plt.plot([theta[k], theta[k]], ax.get_ylim(), 'r--', label='Nulls')
-
-
-plt.show()
+def test_array(num_elements: int, spacing: float, angles: np.ndarray[float]) -> None:
+    spacings = aa.uniform_spacing(num_elements, spacing)
+    weights = np.ones(num_elements)  # Uniform weights
+    
+    antenna_array = aa.AntennaArray("Uniform Linear Array", num_elements, spacings, weights)
+    
+    plt.figure(figsize=(10, 6))
+    
+    FNBWs = np.zeros_like(angles)
+    HPBWs = np.zeros_like(angles)
+    FSLBWs = np.zeros_like(angles)
+    
+    fig = plt.figure(1, figsize=(10, 6))
+    ax = plt.axes(projection='polar')
+    for i, angle in enumerate(angles):
+        beta = aa.beam_direction(antenna_array, frequency, angle)
+        array_response = pattern * aa.array_factor(antenna_array, frequency, theta, beta)
+        ax.plot(theta, linear_to_db(np.abs(array_response)), label=f'Angle: {np.degrees(angle):.1f}°')
+        try:
+            FNBWs[i] = FNBW((np.abs(array_response)), theta)[0]
+        except ValueError as e:
+            print(f"Error calculating FNBW for angle {angle}: {e}")
+            FNBWs[i] = np.nan
+        try:
+            HPBWs[i] = HPBW((np.abs(array_response)), theta)[0]
+        except ValueError as e:
+            print(f"Error calculating HPBW for angle {angle}: {e}")
+            HPBWs[i] = np.nan
+        try:
+            FSLBWs[i] = FSLBW((np.abs(array_response)), theta)[0]
+        except ValueError as e:
+            print(f"Error calculating FSLBW for angle {angle}: {e}")
+            FSLBWs[i] = np.nan
+    config_plot(ax, polar=True)
+    
+    plt.figure(2, figsize=(10, 6))
+    plt.plot(angles, np.degrees(FNBWs), label='FNBW')
+    plt.plot(angles, np.degrees(HPBWs), label='HPBW')
+    plt.plot(angles, np.degrees(FSLBWs), label='FSLBW')
+    plt.xlabel('Angle (radians)')
+    plt.title(f'Antenna Array Beamwidths for {num_elements} Elements')  
+    plt.legend()    
+    plt.show()
+    
+test_array(4, 0.3 * wavelength(frequency), angles)

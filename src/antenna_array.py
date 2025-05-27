@@ -1,9 +1,9 @@
 
 import numpy as np
 from scipy.constants import c
+from utils import wavelength
 
 class AntennaArray:
-
     def __init__(self, name: str,
                  num_elements: int,
                  spacings: np.ndarray[float],
@@ -37,31 +37,40 @@ def uniform_spacing(num_elements: int, spacing: float) -> np.ndarray[float]:
 def beam_direction(array: AntennaArray, frequency: float, angle: float) -> np.ndarray[float]:
     beta = np.linspace(0, array.num_elements - 1, array.num_elements) * angle
     return beta
+ 
+def get_test_data():
+    frequency = 2.4e9  # Frequency in Hz
+    theta = np.linspace(-np.pi, np.pi, 3600)
+    array = AntennaArray("Test Array", 4, uniform_spacing(4, wavelength(frequency)), np.array([1, 1, 1, 1]))
+    
+    test_stearing_angles = np.linspace(-np.pi/2, np.pi/2, 360)
+    test_spacings = np.linspace(0.1, 0.5, 4) * wavelength(frequency)
+    test_pattern = np.abs(np.sinc(theta * 2))  # Example pattern
+    
+    results = np.zeros((len(test_spacings), len(test_stearing_angles), len(theta)), dtype=complex)
+    
+    for i, spacing in enumerate(test_spacings):
+        array.spacings = uniform_spacing(array.num_elements, spacing)
+        for j, angle in enumerate(test_stearing_angles):
+            beta = beam_direction(array, frequency, angle)
+            pattern = test_pattern * array_factor(array, frequency, theta, beta)
+            # print(f"Spacing: {spacing}, Angle: {angle}, Pattern: {pattern}")
+            results[i, j, :] = pattern
+    return results, theta, test_stearing_angles, test_spacings, test_pattern
        
 if __name__ == "__main__":
+    
     import matplotlib.pyplot as plt
-    from utils import wavelength
+    import numpy as np
+    import antenna_array as aa
+    from utils import wavelength, linear_to_db
     
-    # Example usage
-    num_elements = 4
-    frequency = 2.4e9  # 1 GHz
-    spacing = 0.3 * wavelength(frequency)
-    theta = np.linspace(-np.pi/2, np.pi/2, 360)
-    
-    spacings = uniform_spacing(num_elements, spacing)
-    weights = np.ones(num_elements)  # Uniform weights
-    
-    antenna_array = AntennaArray("Uniform Linear Array", num_elements, spacings, weights)
-    angles = np.arange(0, 2*np.pi, np.radians(22.5))
-    
-    plt.figure(figsize=(10, 6))
-    
-    for angle in angles:
-        beta = beam_direction(antenna_array, frequency, angle)
-        array_response = array_factor(antenna_array, frequency, theta, beta)
-        
-        plt.plot(theta, np.abs(array_response), label=f'Array Factor for angle {np.degrees(angle):.2f}')
-    
-    plt.title('Antenna Array Pattern')
-    plt.legend()
+    results, theta, test_stearing_angles, test_spacings, test_pattern = get_test_data()
+            
+    fig = plt.figure(figsize=(12, 8))
+    ax = plt.subplot(projection='polar')
+    ax.set_ylim(-30, 0)
+    ax.plot(theta, linear_to_db(np.abs(results[0, 140, :])))
     plt.show()
+    
+    pass
