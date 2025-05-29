@@ -105,9 +105,19 @@ def plot_pattern(pattern, theta, ax=None, label=None):
         fig, ax = plt.subplots()
     ax.plot(theta, linear_to_db(pattern), label=label)
     ax.grid(True)
-    ax.axvline(get_lobe(pattern, theta, 0)[1][0], color='red', linestyle='--', label='Main Lobe')
-    ax.axvline(get_lobe(pattern, theta, 0)[1][-1], color='red', linestyle='--', label='Main Lobe')
-    ax.title.set_text(f'FNBW: {FNBW(pattern, theta):.2f} rad, HPBW: {HPBW(pattern, theta):.2f} rad')    
+    # ax.axvline(get_lobe(pattern, theta, 0)[1][0], color='red', linestyle='--', label='Main Lobe')
+    # ax.axvline(get_lobe(pattern, theta, 0)[1][-1], color='red', linestyle='--', label='Main Lobe')
+    
+    markers_func = [find_maximas, find_nulls]
+    
+    for func in markers_func:
+        peaks, peak_thetas = func(pattern, theta)
+        ax.plot(peak_thetas, linear_to_db(peaks), 'o', label=f'{func.__name__.capitalize()}')
+    
+    print(f'HPBW: {HPBW(pattern, theta)/np.pi} pi')
+    print(f'FNBW: {FNBW(pattern, theta)/np.pi} pi')
+    print(f'FSLBW: {FSLBW(pattern, theta)/np.pi} pi')
+    print(f'FSL Peak: {FSL_peak(pattern, theta)}')
     return ax
 
 if __name__ == "__main__":
