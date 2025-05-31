@@ -7,6 +7,9 @@ def wavelength(frequency: float) -> float:
 def linear_to_db(linear: np.ndarray[float]) -> np.ndarray[float]:
     return 10 * np.log10(linear)
 
+def db_to_linear(db: np.ndarray[float]) -> np.ndarray[float]:
+    return 10 ** (db / 10)
+
 def config_plot(ax) -> None:
     ax.set_ylim(-50, 0)
     ax.grid(True)

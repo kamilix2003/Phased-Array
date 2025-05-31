@@ -121,50 +121,5 @@ def plot_pattern(pattern, theta, ax=None, label=None):
     return ax
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    import antenna_array as aa
-    from utils import linear_to_db, config_plot
     
-    results, theta, test_stearing_angles, test_spacings, test_pattern = aa.get_test_data()
-    
-    spcaing_idx = 1
-    angle_idx = len(test_stearing_angles+10) // 2
-    
-    pattern = np.abs(results[spcaing_idx, angle_idx, :])
-    fig = plt.figure(figsize=(10, 6))
-    ax = plt.subplot(1, 1, 1, projection='rectilinear')
-    # ax.plot(theta, linear_to_db(pattern), label='Pattern')
-    config_plot(ax)
-       
-    nlobe, ntheta = get_lobe(pattern, theta, 0)
-    ax.plot(ntheta, linear_to_db(nlobe), color='red', label='Main Lobe')
-    nlobe, ntheta = get_lobe(pattern, theta, 1)
-    ax.plot(ntheta, linear_to_db(nlobe), color='green', label='Right Lobe')
-    nlobe, ntheta = get_lobe(pattern, theta, -1)
-    ax.plot(ntheta, linear_to_db(nlobe), color='blue', label='Left Lobe')
-    env = get_envelope(pattern, theta)
-    ax.plot(theta, linear_to_db(pattern), color='black', label='pattern')
-    ax.plot(theta, linear_to_db(env), color='orange', label='Envelope', linestyle='--')
-    
-    plt.legend()
-    plt.show()
-
-        
-    patterns = results[2, :, :]
-    pattern_HPBW = pattern_measurement(HPBW, patterns, theta)
-    pattern_FNBW = pattern_measurement(FNBW, patterns, theta)
-    pattern_FSLBW = pattern_measurement(FSLBW, patterns, theta)
-    pattern_FSL_peak = pattern_measurement(FSL_peak, patterns, theta)
-
-    fig = plt.figure(figsize=(12, 8))
-    ax = plt.subplot(2, 1, 1)
-    ax.plot(np.degrees(test_stearing_angles), np.degrees(pattern_HPBW), label='HPBW')
-    ax.plot(np.degrees(test_stearing_angles), np.degrees(pattern_FNBW), label='FNBW')
-    ax.plot(np.degrees(test_stearing_angles), np.degrees(pattern_FSLBW), label='FSLBW')
-    ax.legend()
-    ax = plt.subplot(2, 1, 2)
-    ax.plot(np.degrees(test_stearing_angles), pattern_FSL_peak, label='FSL Peak')
-    ax.legend()
-    plt.show()
-    
-    
+    pass
