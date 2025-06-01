@@ -39,12 +39,12 @@ def uniform_spacing(num_elements: int, spacing: float) -> np.ndarray[float]:
 def nonuniform_spacing(num_elements: int, spacings: np.ndarray[float]) -> np.ndarray[float]:
     out = np.zeros(num_elements)
     if num_elements % 2 == 0:
-        out[num_elements//2:] = np.cumsum(spacings[:num_elements//2])
-        out[:num_elements//2] = -np.cumsum(spacings[:num_elements//2])[::-1]
+        out[num_elements//2:] = spacings
+        out[:num_elements//2] = -spacings[::-1]
     else:
         out[num_elements//2] = 0
-        out[num_elements//2+1:] = np.cumsum(spacings[:num_elements//2])
-        out[:num_elements//2] = -np.cumsum(spacings[:num_elements//2])[::-1]
+        out[num_elements//2 + 1:] = spacings
+        out[:num_elements//2] = -spacings[::-1]
         
     return out
 
@@ -53,5 +53,21 @@ def beam_direction(array: AntennaArray, angle: float) -> np.ndarray[float]:
     return beta
         
 if __name__ == "__main__":
+
+    import matplotlib.pyplot as plt
+    from utils import linear_to_db
+
+    theta = np.linspace(-np.pi, np.pi, 360)
+    frequency = 2.4e9  # 1 GHz
+    # pattern_antenna = np.cos(theta) ** 2 * np.cos(theta / 2) ** 4
+
+    aa = AntennaArray('array', 4, uniform_spacing(4, 0.75) * wavelength(frequency), np.ones(4))
+    af = array_factor(aa, frequency, theta, beam_direction(aa, 0))
+    
+    fig = plt.figure(figsize=(10, 5))
+    ax = plt.plot(np.degrees(theta), linear_to_db(np.abs(af)), label='Array Factor')
+    plt.ylim(-30, 0)
+    plt.xlim(-90, 90)
+    plt.show()
 
     pass

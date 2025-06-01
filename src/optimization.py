@@ -1,7 +1,6 @@
 from antenna_array import AntennaArray, uniform_spacing, nonuniform_spacing, beam_direction, array_factor
 from utils import wavelength, linear_to_db
 
-from scipy.signal import correlate
 
 import pattern_measurements as pm
 import numpy as np
@@ -23,7 +22,10 @@ def optimize_pattern(spacing, *args):
   num_elements = args[0]["num_elements"]
 
   weights = np.ones(num_elements)  
-  aa = AntennaArray(f'array', num_elements, nonuniform_spacing(num_elements, spacing), weights)
+  aa = AntennaArray(f'array', 
+                    num_elements,
+                    uniform_spacing(num_elements, spacing) * wavelength(frequency),
+                    weights)
 
   beta = beam_direction(aa, beam_sweap[len(beam_sweap) // 2])
   af = array_factor(aa, 
@@ -55,9 +57,10 @@ if __name__ == "__main__":
   
   N = 360
   theta = np.linspace(-np.pi, np.pi, N)
-  pattern_antenna = np.sinc(theta * 2) ** 2  # Example pattern, can be modified
+  # pattern_antenna = np.sinc(theta * 2) ** 2 
+  pattern_antenna = np.cos(theta) ** 2  * np.cos(theta / 2) ** 4
 
-  N_beam_width_lower = 10
+  N_beam_width_lower = 5
   N_beam_width_upper = 15
   pattern_goal_upper = db_to_linear(-20 * np.ones_like(theta))
   pattern_goal_upper[N//2 - N_beam_width_upper:N//2 + N_beam_width_upper] = db_to_linear(1e-9 * np.ones(2 * N_beam_width_upper))
@@ -66,7 +69,7 @@ if __name__ == "__main__":
   
   sweap_angles = np.arange(-7, 8) * np.radians(22.5)
 
-  num_elements = 5
+  num_elements = 4
 
   args = {
     "text": "test",
@@ -79,17 +82,22 @@ if __name__ == "__main__":
     "num_elements": num_elements
   }
 
+  
+
   opt_result = optimize.minimize(
       optimize_pattern,
-      x0=np.array([0.1, 0.1]),
-      bounds=[(0.1, 0.5), (0.1, 0.5)],
+      x0=np.array([0.1]),
+      bounds=[(0.01, 2.0)],
       method='Powell',
       args=args
   )
   
   print(opt_result)
-  print(f'spacing: {nonuniform_spacing(num_elements, opt_result.x)}')
-  aa = AntennaArray(f'Optimized array', num_elements, nonuniform_spacing(num_elements, opt_result.x), np.ones(num_elements))
+  print(f'spacing: {uniform_spacing(num_elements, opt_result.x)}')
+  aa = AntennaArray(f'Optimized array',
+                    num_elements,
+                    uniform_spacing(num_elements, opt_result.x) * wavelength(2.4e9),
+                    np.ones(num_elements))
 
   beta = beam_direction(aa, 0)
   af = array_factor(aa, 
@@ -108,15 +116,15 @@ if __name__ == "__main__":
   ax.plot(theta_out, linear_to_db(pattern_out), 'r.', label='Outside Bounds')
   ax.set_ylim(-40, 3)
   ax.legend()
-  
+  ax.grid()
   ax = fig.add_subplot(2, 2, 3)
   ax.plot(theta, linear_to_db(pattern_antenna), label='Antenna Pattern')
   ax.set_ylim(-40, 3)
   ax.legend()
-  
+  ax.grid()
   ax = fig.add_subplot(2, 2, 4)
   ax.plot(theta, linear_to_db(np.abs(af)), label='Array Factor')
   ax.set_ylim(-40, 3)
   ax.legend()
-  
+  ax.grid()
   plt.show()
