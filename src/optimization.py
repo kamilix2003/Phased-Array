@@ -1,4 +1,4 @@
-from antenna_array import AntennaArray, uniform_spacing, nonuniform_spacing, beam_direction, array_factor
+from antenna_array import AntennaArray, beam_direction, array_factor, symetric_spacing
 from utils import wavelength, linear_to_db
 
 
@@ -10,8 +10,10 @@ def outside_bounds(theta, pattern, bounds_upper, bounds_lower):
   print(f"Number of points outside bounds: {np.sum(pattern_out)}")
   return theta[pattern_out], pattern[pattern_out]
 
-def optimize_pattern(spacing, *args):
-  print(f"Optimizing with spacing: {spacing}")
+def optimize_pattern(x, *args):
+  # print(f"Optimizing with spacing: {spacing}")
+  spacing = np.array([x[0]])
+  weights = np.array(x[1:])
   text = args[0]["text"]
   frequency = args[0]["frequency"]
   pattern_antenna = args[0]["pattern_antenna"]
@@ -21,10 +23,10 @@ def optimize_pattern(spacing, *args):
   theta = args[0]["theta"]
   num_elements = args[0]["num_elements"]
 
-  weights = np.ones(num_elements)  
+  # weights = np.ones(num_elements)  
   aa = AntennaArray(f'array', 
                     num_elements,
-                    uniform_spacing(num_elements, spacing) * wavelength(frequency),
+                    symetric_spacing(num_elements, spacing) * wavelength(frequency),
                     weights)
 
   beta = beam_direction(aa, beam_sweap[len(beam_sweap) // 2])
@@ -39,10 +41,12 @@ def optimize_pattern(spacing, *args):
     - pattern_goal_lower[~(pattern_array > pattern_goal_lower)]))
   b = np.sum(np.abs(pattern_array[~(pattern_array < pattern_goal_upper)] \
     - pattern_goal_upper[~(pattern_array < pattern_goal_upper)]))
-  out = a + b
+    
+  # c = np.abs(pm.HPBW(pattern_array, theta) - np.radians(22.5))
+  c=0
+  out = a + b + c
 
   return out
-
 
 if __name__ == "__main__":
   import numpy as np
@@ -55,13 +59,20 @@ if __name__ == "__main__":
   
   from utils import wavelength, linear_to_db, db_to_linear
   
-  N = 360
-  theta = np.linspace(-np.pi, np.pi, N)
-  # pattern_antenna = np.sinc(theta * 2) ** 2 
-  pattern_antenna = np.cos(theta) ** 2  * np.cos(theta / 2) ** 4
+  from import_pattern import extract_pattern_data, prepare_data
 
-  N_beam_width_lower = 5
-  N_beam_width_upper = 15
+  power_matrix, angles, frequencies = extract_pattern_data()
+  power_pattern = prepare_data(power_matrix, angles, frequencies, 360)[:, 0]
+
+  N = 360
+  theta = np.linspace(-np.pi/2, np.pi/2, N)
+  # pattern_antenna = np.sinc(theta * 2) ** 2
+  # pattern_antenna = np.cos(theta) ** 2  * np.cos(theta / 2) ** 4
+  pattern_antenna = db_to_linear(power_pattern - np.max(power_pattern))
+
+  N_beam_width_lower = 10
+  N_beam_width_upper = (np.abs(theta - np.radians(32.5)).argmin() - N//2) // 2
+
   pattern_goal_upper = db_to_linear(-20 * np.ones_like(theta))
   pattern_goal_upper[N//2 - N_beam_width_upper:N//2 + N_beam_width_upper] = db_to_linear(1e-9 * np.ones(2 * N_beam_width_upper))
   pattern_goal_lower = 0 * np.ones_like(theta)
@@ -82,22 +93,35 @@ if __name__ == "__main__":
     "num_elements": num_elements
   }
 
+  spacing_constraints = np.array([(0.1, 1)])
+  initial_spacing = np.array([0.2])
+
+  weight_constraints = np.array([(0, 1)] * num_elements)
+  initial_weights = np.ones(num_elements)
   
+  constraints = np.concatenate((spacing_constraints, weight_constraints), axis=0)
+  initial = np.concatenate((initial_spacing, initial_weights), axis=0)
+  print(constraints, initial)
+
 
   opt_result = optimize.minimize(
       optimize_pattern,
-      x0=np.array([0.1]),
-      bounds=[(0.01, 2.0)],
+      x0=initial,
+      bounds=constraints,
       method='Powell',
       args=args
   )
   
   print(opt_result)
-  print(f'spacing: {uniform_spacing(num_elements, opt_result.x)}')
+  
+  opt_spacing = opt_result.x[0]
+  opt_weights = opt_result.x[1:]
+  print(f'opt_spacing: {opt_spacing}, opt_weights: {opt_weights}')
+  print(f'spacing: {symetric_spacing(num_elements, opt_spacing)}')
   aa = AntennaArray(f'Optimized array',
                     num_elements,
-                    uniform_spacing(num_elements, opt_result.x) * wavelength(2.4e9),
-                    np.ones(num_elements))
+                    symetric_spacing(num_elements, opt_spacing) * wavelength(2.4e9),
+                    opt_weights)
 
   beta = beam_direction(aa, 0)
   af = array_factor(aa, 
@@ -105,6 +129,8 @@ if __name__ == "__main__":
                     theta,
                     beta)
   pattern_array = np.abs(af) * pattern_antenna
+  
+  theta = np.degrees(theta)
   
   fig = plt.figure(figsize=(10, 6))
   ax = fig.add_subplot(2, 2, (1, 2))

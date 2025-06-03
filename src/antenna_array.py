@@ -30,23 +30,24 @@ def array_factor(array: AntennaArray,
     array_response = array.weights[:, np.newaxis] * np.exp(1j * phase_shift(array, frequency, theta, beta))
     return np.sum(array_response, axis=0) / array.num_elements
 
-def uniform_spacing(num_elements: int, spacing: float) -> np.ndarray[float]:
+def symetric_spacing(num_elements: int, spacing) -> np.ndarray[float]:
+    if type(spacing) is not np.ndarray:
+        spacing = np.array([spacing])
     if num_elements % 2 == 0:
-        return np.linspace(-num_elements/2, num_elements/2, num_elements) * spacing
+        if len(spacing) == 1:
+            return (np.arange(-num_elements//2, num_elements//2) + .5) * spacing
+        elif len(spacing) == (num_elements // 2):
+            return np.concatenate((-spacing[::-1], spacing))
+        else:
+            raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
     else:
-        return np.linspace(-(num_elements + spacing)/2, (num_elements + spacing)/2, num_elements) * spacing
-
-def nonuniform_spacing(num_elements: int, spacings: np.ndarray[float]) -> np.ndarray[float]:
-    out = np.zeros(num_elements)
-    if num_elements % 2 == 0:
-        out[num_elements//2:] = spacings
-        out[:num_elements//2] = -spacings[::-1]
-    else:
-        out[num_elements//2] = 0
-        out[num_elements//2 + 1:] = spacings
-        out[:num_elements//2] = -spacings[::-1]
+        if len(spacing) == 1:
+            return (np.arange(-(num_elements)//2 + 1, (num_elements+1)//2)) * spacing
+        elif len(spacing) == (num_elements // 2):
+            return np.concatenate((-spacing[::-1], [0], spacing))
+        else:
+            raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
         
-    return out
 
 def beam_direction(array: AntennaArray, angle: float) -> np.ndarray[float]:
     beta = np.linspace(0, array.num_elements - 1, array.num_elements) * angle
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     frequency = 2.4e9  # 1 GHz
     # pattern_antenna = np.cos(theta) ** 2 * np.cos(theta / 2) ** 4
 
-    aa = AntennaArray('array', 4, uniform_spacing(4, 0.75) * wavelength(frequency), np.ones(4))
+    aa = AntennaArray('array', 4, symetric_spacing(4, 0.75) * wavelength(frequency), np.ones(4))
     af = array_factor(aa, frequency, theta, beam_direction(aa, 0))
     
     fig = plt.figure(figsize=(10, 5))
