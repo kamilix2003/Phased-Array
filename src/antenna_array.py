@@ -30,7 +30,7 @@ def array_factor(array: AntennaArray,
     array_response = array.weights[:, np.newaxis] * np.exp(1j * phase_shift(array, frequency, theta, beta))
     return np.sum(array_response, axis=0) / array.num_elements
 
-def symetric_spacing(num_elements: int, spacing) -> np.ndarray[float]:
+def symmetric_spacing(num_elements: int, spacing) -> np.ndarray[float]:
     if type(spacing) is not np.ndarray:
         spacing = np.array([spacing])
     if num_elements % 2 == 0:
@@ -49,10 +49,13 @@ def symetric_spacing(num_elements: int, spacing) -> np.ndarray[float]:
             raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
         
 
-def beam_direction(array: AntennaArray, angle: float) -> np.ndarray[float]:
-    beta = np.linspace(0, array.num_elements - 1, array.num_elements) * angle
+def beam_direction(array: AntennaArray, angle: float, frequency = 2.4e9) -> np.ndarray[float]:
+    # avg_spacing = np.mean(np.abs(np.diff(array.spacings)))
+    avg_spacing = np.abs(array.spacings[0] - array.spacings[1])
+    shift = 2 * np.pi * avg_spacing * np.sin(angle) / wavelength(frequency)
+    beta = - np.arange(-array.num_elements // 2 + 1, array.num_elements // 2 + 1) * shift
     return beta
-        
+
 if __name__ == "__main__":
 
     import matplotlib.pyplot as plt
@@ -61,12 +64,14 @@ if __name__ == "__main__":
     theta = np.linspace(-np.pi, np.pi, 360)
     frequency = 2.4e9  # 1 GHz
     # pattern_antenna = np.cos(theta) ** 2 * np.cos(theta / 2) ** 4
-
-    aa = AntennaArray('array', 4, symetric_spacing(4, 0.75) * wavelength(frequency), np.ones(4))
-    af = array_factor(aa, frequency, theta, beam_direction(aa, 0))
+    num_element = 7
+    aa = AntennaArray('array', num_element, symmetric_spacing(num_element, 0.75) * wavelength(frequency), np.ones(num_element))
+    print(beam_direction(aa, 22.5))
+    af = array_factor(aa, frequency, theta, beam_direction(aa, 22.5))
     
     fig = plt.figure(figsize=(10, 5))
     ax = plt.plot(np.degrees(theta), linear_to_db(np.abs(af)), label='Array Factor')
+
     plt.ylim(-30, 0)
     plt.xlim(-90, 90)
     plt.show()

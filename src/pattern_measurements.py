@@ -4,20 +4,20 @@ from scipy import signal
 from utils import linear_to_db
 
 def find_maximas(pattern : np.ndarray[float], theta: np.ndarray[float]):
-    peaks, _ = signal.find_peaks(pattern)
+    peaks, _ = signal.find_peaks(pattern, width=len(pattern) // 100)
     return pattern[peaks], theta[peaks]
 
 def find_nulls(pattern : np.ndarray[float], theta: np.ndarray[float]):
-    nulls, _ = signal.find_peaks(-pattern)
+    nulls, _ = signal.find_peaks(-pattern, width=len(pattern) // 100)
     return pattern[nulls], theta[nulls]
 
 def find_main_peak(pattern : np.ndarray[float], theta: np.ndarray[float]):
-    peaks, _ = signal.find_peaks(pattern)
+    peaks, _ = signal.find_peaks(pattern, width=len(pattern) // 100)
     main_lobe = peaks[np.argmax(pattern[peaks])]
     return pattern[main_lobe], theta[main_lobe]
 
 def find_nth_peak(pattern: np.ndarray, theta: np.ndarray, n: int):
-    peaks, _ = signal.find_peaks(pattern)
+    peaks, _ = signal.find_peaks(pattern, width=len(pattern) // 100)
     if len(peaks) == 0:
         return None, None
     main_lobe_idx = peaks[np.argmax(pattern[peaks])]
@@ -57,7 +57,7 @@ def FNBW(pattern : np.ndarray[float], theta: np.ndarray[float]) -> float:
     _, main_lobe_theta = get_lobe(pattern, theta, 0)
     return np.abs(main_lobe_theta[0] - main_lobe_theta[-1])
 
-def HPBW(pattern : np.ndarray[float], theta: np.ndarray[float]) -> float:
+def HPBW(pattern : np.ndarray[float], theta: np.ndarray[float], ax=None, degrees=True) -> float:
     main_lobe, main_lobe_theta = get_lobe(pattern, theta, 0)
 
     thershold = main_lobe.max() / np.sqrt(2)
@@ -68,6 +68,14 @@ def HPBW(pattern : np.ndarray[float], theta: np.ndarray[float]) -> float:
     left_theta = main_lobe_theta[left_idx]
     right_theta = main_lobe_theta[right_idx]
     
+    if ax is not None:
+        if degrees:
+            ax.axvline(np.degrees(left_theta), color='red', linestyle='--', label='HPBW')
+            ax.axvline(np.degrees(right_theta), color='red', linestyle='--', label='HPBW')
+        else:
+            ax.axvline(left_theta, color='red', linestyle='--', label='HPBW')
+            ax.axvline(right_theta, color='red', linestyle='--', label='HPBW')
+
     return np.abs(left_theta - right_theta)
 
 def FSLBW(pattern : np.ndarray[float], theta: np.ndarray[float]) -> float:
