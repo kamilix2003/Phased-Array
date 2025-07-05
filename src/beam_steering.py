@@ -1,40 +1,30 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
 from utils import wavelength
+from spacing import gen_spacing
+from scipy.constants import c
 
-def steer_to_phase(steer_angle, frequency, spacing):
-    
-    phase_shift = 2 * np.pi * spacing[:, np.newaxis] / wavelength(frequency) * np.sin(steer_angle)
-    
-    return phase_shift
+def steer_to_phase(N_elements, spacings, steer_angles, frequency):
 
+    """ 
+        Rows: beta for each element
+        Cols: steer angles
+    """
 
-if __name__ == "__main__":
-    import numpy as np
-    import matplotlib.pyplot as plt
+    D = gen_spacing(N_elements, spacings)
     
-    from utils import wavelength
-    
+    return np.sin(steer_angles[:, np.newaxis]) * 2 * np.pi * frequency / c * D
+
+def main():
+    from spacing import gen_spacing
     frequency = 2.4e9
 
-    spacing = np.linspace(0.05, 0.5, 10) * wavelength(frequency)
-    steer_angle = np.radians(np.linspace(-90, 90, 100))
+    spacings = np.array([0.1, 0.15, 0.2])
+    steer_angle = np.radians(np.linspace(-45, 45, 15))
     
-    quant_phase_shift = np.linspace(-180, 180, 16)
+    phase_shift = steer_to_phase(7, spacings, steer_angle, 2.4e9)
+
+if __name__ == "__main__":
+    main()
     
-    phase_shift = steer_to_phase(steer_angle, frequency, spacing)
-
-    fig = plt.figure(figsize=(10, 5))
-    ax = fig.add_subplot(111)
-
-    for i in range(len(spacing)):
-        ax.plot(np.degrees(steer_angle), np.degrees(phase_shift[i]), label=f'Spacing: {spacing[i]:.2f} m')
-
-
-    for q in quant_phase_shift:
-        ax.axhline(q, color='black', linestyle='--', linewidth=0.5)
-
-    ax.set_xlabel('Steering Angle (degrees)')
-    ax.set_ylabel('Phase Shift (degrees)')
-    ax.set_title('Phase Shift vs Steering Angle')
-    ax.legend()
-    plt.show()
-

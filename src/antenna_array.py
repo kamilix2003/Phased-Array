@@ -13,67 +13,64 @@ class AntennaArray:
         self.spacings: np.ndarray[float] = spacings
         self.weights: np.ndarray[float] = weights
         
-def phase_shift(array: AntennaArray,
+def phase_shift(spacings,
                 frequency: float,
                 theta: np.ndarray[float],
                 beta: np.ndarray[float]
                 ) -> np.ndarray[float, float]:
     
-    return 2 * np.pi * frequency / c * array.spacings[:, np.newaxis] * np.sin(theta) + beta[:, np.newaxis]
+    return 2 * np.pi * frequency / c * spacings[:, np.newaxis] * np.sin(theta) + beta[:, :, np.newaxis]
 
-def array_factor(array: AntennaArray,
-                 frequency: float,
-                 theta: np.ndarray[float],
-                 beta: np.ndarray[float]
+def array_factor(weights,
+                 num_elements,
+                 psi
                  ) -> np.ndarray[complex]:
     
-    array_response = array.weights[:, np.newaxis] * np.exp(1j * phase_shift(array, frequency, theta, beta))
-    return np.sum(array_response, axis=0) / array.num_elements
+    array_response = weights[:, np.newaxis] * np.exp(1j * psi)
+    return np.sum(array_response, axis=1) / num_elements
 
-def symmetric_spacing(num_elements: int, spacing) -> np.ndarray[float]:
-    if type(spacing) is not np.ndarray:
-        spacing = np.array([spacing])
-    if num_elements % 2 == 0:
-        if len(spacing) == 1:
-            return (np.arange(-num_elements//2, num_elements//2) + .5) * spacing
-        elif len(spacing) == (num_elements // 2):
-            return np.concatenate((-spacing[::-1], spacing))
-        else:
-            raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
-    else:
-        if len(spacing) == 1:
-            return (np.arange(-(num_elements)//2 + 1, (num_elements+1)//2)) * spacing
-        elif len(spacing) == (num_elements // 2):
-            return np.concatenate((-spacing[::-1], [0], spacing))
-        else:
-            raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
+# def symmetric_spacing(num_elements: int, spacing) -> np.ndarray[float]:
+#     if type(spacing) is not np.ndarray:
+#         spacing = np.array([spacing])
+#     if num_elements % 2 == 0:
+#         if len(spacing) == 1:
+#             return (np.arange(-num_elements//2, num_elements//2) + .5) * spacing
+#         elif len(spacing) == (num_elements // 2):
+#             return np.concatenate((-spacing[::-1], spacing))
+#         else:
+#             raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
+#     else:
+#         if len(spacing) == 1:
+#             return (np.arange(-(num_elements)//2 + 1, (num_elements+1)//2)) * spacing
+#         elif len(spacing) == (num_elements // 2):
+#             return np.concatenate((-spacing[::-1], [0], spacing))
+#         else:
+#             raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
         
 
-def beam_direction(array: AntennaArray, angle: float, frequency = 2.4e9) -> np.ndarray[float]:
-    # avg_spacing = np.mean(np.abs(np.diff(array.spacings)))
-    avg_spacing = np.abs(array.spacings[0] - array.spacings[1])
-    shift = 2 * np.pi * avg_spacing * np.sin(angle) / wavelength(frequency)
-    beta = - np.arange(-array.num_elements // 2 + 1, array.num_elements // 2 + 1) * shift
-    return beta
-
-if __name__ == "__main__":
-
+def main():
     import matplotlib.pyplot as plt
     from utils import linear_to_db
-
-    theta = np.linspace(-np.pi, np.pi, 360)
+    from spacing import gen_spacing
+    from beam_steering import steer_to_phase    
+    theta = np.linspace(-np.pi/2, np.pi/2, 360)
     frequency = 2.4e9  # 1 GHz
     # pattern_antenna = np.cos(theta) ** 2 * np.cos(theta / 2) ** 4
-    num_element = 7
-    aa = AntennaArray('array', num_element, symmetric_spacing(num_element, 0.75) * wavelength(frequency), np.ones(num_element))
-    print(beam_direction(aa, 22.5))
-    af = array_factor(aa, frequency, theta, beam_direction(aa, 22.5))
+    num_element = 6
     
-    fig = plt.figure(figsize=(10, 5))
-    ax = plt.plot(np.degrees(theta), linear_to_db(np.abs(af)), label='Array Factor')
-
-    plt.ylim(-30, 0)
-    plt.xlim(-90, 90)
+    sps = gen_spacing(num_element, np.array([0.25, 0.25, 0.4]) * (c / frequency))
+    print(sps)
+    sa = np.linspace(-np.pi/4, np.pi/4, 9)
+    b = steer_to_phase(num_element, sps, sa, frequency)
+    ps = phase_shift(sps, frequency, theta, b)
+    af = array_factor(np.ones(num_element), num_element, ps)
+    fig = plt.figure()
+    plt.plot(theta, linear_to_db(np.abs(af[4, :])))
+    plt.ylim(-40, 1)
     plt.show()
-
+    
     pass
+
+if __name__ == "__main__":
+    main()
+    
