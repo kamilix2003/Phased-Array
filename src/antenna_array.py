@@ -24,7 +24,7 @@ def phase_shift(spacings,
 def array_factor(weights,
                  num_elements,
                  psi
-                 ) -> np.ndarray[complex]:
+                 ):
     
     array_response = weights[:, np.newaxis] * np.exp(1j * psi)
     return np.sum(array_response, axis=1) / num_elements

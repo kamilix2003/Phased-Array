@@ -10,7 +10,7 @@ def outside_bounds(theta, pattern, bounds_upper, bounds_lower):
   print(f"Number of points outside bounds: {np.sum(pattern_out)}")
   return theta[pattern_out], pattern[pattern_out]
 
-def optimize_pattern(x, *args):
+def optimize_pattern(x, *args, **kwargs):
   # print(f"Optimizing with spacing: {spacing}")
   spacing = np.array([x[0]])
   weights = np.array(x[1:])
