@@ -22,16 +22,16 @@ def get_main_lobe(pattern, theta, nth):
     
     return np.arange(left_null_idx, right_null_idx)
 
-def get_main_lobe(pattern, theta, nth = 0):
+def get_lobe(pattern, theta, nth = 0):
     peaks_idx = find_maximas(pattern, theta)
     nulls_idx = find_nulls(pattern, theta)
     main_peak_idx = np.argmax(pattern[peaks_idx])
-    print(main_peak_idx, nth, peaks_idx.size)
+    # print(main_peak_idx, nth, peaks_idx.size)
     if main_peak_idx + nth < peaks_idx.size:
         get_peak_idx = peaks_idx[main_peak_idx + nth]
     else:
         return 0
-    print(peaks_idx, nulls_idx, get_peak_idx)
+    # print(peaks_idx, nulls_idx, get_peak_idx)
     if nulls_idx[get_peak_idx > nulls_idx].size != 0:
         left_null_idx = nulls_idx[get_peak_idx > nulls_idx][-1]
     else:
@@ -41,7 +41,8 @@ def get_main_lobe(pattern, theta, nth = 0):
     else:
         right_null_idx = pattern.size
     
-    print(left_null_idx, right_null_idx)
+    # print(left_null_idx, right_null_idx)
+    if right_null_idx != pattern.size: right_null_idx+=1
     return np.arange(left_null_idx, right_null_idx)
      
 
@@ -56,14 +57,14 @@ def main():
     frequency = 2.4e9  # 1 GHz
     # pattern_antenna = np.cos(theta) ** 2 * np.cos(theta / 2) ** 4
     num_element = 7
-
+    n = 2
     ant_pat = gen_rect_patter(theta, frequency)
-    sps = gen_spacing(num_element, np.array([0.4, 0.4, 0.4]) * (c / frequency))
+    sps = gen_spacing(num_element, np.array([0.2, 0.2, 0.2]) * (c / frequency))
     sa = np.linspace(-np.pi/4, np.pi/4, 9)
     b = steer_to_phase(num_element, sps, sa, frequency)
     ps = phase_shift(sps, frequency, theta, b)
     af = array_factor(np.ones(num_element), num_element, ps)
-    ap = ant_pat * np.abs(af[4, :])
+    ap = ant_pat * np.abs(af[n, :])
     ap_db = linear_to_db(ap)
     
     fig = plt.figure()
@@ -76,8 +77,8 @@ def main():
     main_idx = get_main_lobe(ap_db, theta, 0)
     plt.plot(theta[main_idx], ap_db[main_idx], "r")
     
+    print(f'{n}: {np.degrees(sa[n])} deg')
     for i in np.arange(-2, 3):
-        print(i)
         main_idx = get_main_lobe(ap_db, theta, i)
         plt.plot(theta[main_idx], ap_db[main_idx], ls=":")
     
