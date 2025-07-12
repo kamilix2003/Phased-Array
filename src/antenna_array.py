@@ -1,7 +1,6 @@
 
 import numpy as np
 from scipy.constants import c
-from utils import wavelength
 
 class AntennaArray:
     def __init__(self, name: str,

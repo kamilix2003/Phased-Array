@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import wavelength
 from spacing import gen_spacing
 from scipy.constants import c
 
@@ -17,7 +16,6 @@ def steer_to_phase(N_elements, spacings, steer_angles, frequency):
     return np.sin(steer_angles[:, np.newaxis]) * 2 * np.pi * frequency / c * D
 
 def main():
-    from spacing import gen_spacing
     frequency = 2.4e9
 
     spacings = np.array([0.1, 0.15, 0.2])
