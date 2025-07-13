@@ -55,9 +55,9 @@ def main():
     theta = np.linspace(-np.pi/2, np.pi/2, 360)
     frequency = 2.4e9  # 1 GHz
     # pattern_antenna = np.cos(theta) ** 2 * np.cos(theta / 2) ** 4
-    num_element = 6
+    num_element = 7
     
-    sps = gen_spacing(num_element, np.array([0.25, 0.25, 0.4]) * (c / frequency))
+    sps = gen_spacing(num_element, np.array([0.4, 0.4, 0.4]) * (c / frequency))
     print(sps)
     sa = np.linspace(-np.pi/4, np.pi/4, 9)
     b = steer_to_phase(num_element, sps, sa, frequency)

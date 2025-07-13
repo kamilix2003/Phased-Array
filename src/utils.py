@@ -12,6 +12,7 @@ def config_plot(ax) -> None:
     ax.grid(True)
   
 import matplotlib.pyplot as plt
+import pattern_measurements as pm
     
 def plot_array(spacings, weights=None, theta=None, frequency=2.4e9, steer_angles=None):
   from pattern import gen_rect_patter
@@ -22,7 +23,7 @@ def plot_array(spacings, weights=None, theta=None, frequency=2.4e9, steer_angles
   if weights is None:
     weights = np.zeros_like(spacings)
   if theta is None:
-    theta = np.linspace(-np.pi, np.pi, N)
+    theta = np.linspace(-np.pi/2, np.pi/2, N)
   if steer_angles is None:
     steer_angles = np.linspace(-np.pi/6, np.pi/6, n)
   
@@ -37,9 +38,16 @@ def plot_array(spacings, weights=None, theta=None, frequency=2.4e9, steer_angles
   ap_db = linear_to_db(ap)
   
   fig = plt.figure()
+  ylim = (-40, 3)
   ax = plt.subplot(2, 2, (1, 2))
   for i, steer_angle in enumerate(steer_angles):
-    ax.plot(theta, ap_db[i, :])
+    main_idx = pm.get_lobe(ap_db[i, :], theta)
+    # ax.plot(theta, ap_db[i, :], label=f'angle: {steer_angle:.2f} rad')
+    ax.plot(theta[main_idx], ap_db[i, main_idx], label=f'angle: {steer_angle:.2f} rad')
+    ax.vlines(steer_angle, ylim[0], ylim[1])
+    ax.hlines(np.max(ap_db[i, main_idx]), theta[main_idx[0]], theta[main_idx[-1]])
   
-  plt.show()
+  ax.set_ylim(ylim)
+  ax.legend()
+  
   return fig
