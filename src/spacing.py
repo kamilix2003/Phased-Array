@@ -1,23 +1,22 @@
 import numpy as np
 
 def gen_spacing(N_elements, spacings):
-  temp_element = 0
+  if len(spacings) == 1:
+    return uniform_spacing(N_elements, spacings[0])
   if N_elements % 2 == 0:
-    temp_element = 1
-  out = np.zeros(N_elements + temp_element)
-  center_idx = (N_elements + temp_element) // 2
-  for i in range(1, center_idx+1):
-    out[center_idx + i] = np.sum(spacings[0:i])
-    out[center_idx - i] = - np.sum(spacings[0:i])
-  if temp_element == 1:
-    return out[1:]
-  return out
-  pass
+    return np.concatenate((-np.cumsum(spacings)[::-1], np.cumsum(spacings))) + np.sum(spacings)
+  else:
+    return np.concatenate((-np.cumsum(spacings)[::-1], [0], np.cumsum(spacings))) + np.sum(spacings)
+
+def uniform_spacing(N_elements, spacing):
+  return np.cumsum(np.full(N_elements, spacing)) - spacing
 
 def test():
-  test_spacings = [0.1, 0.2, 0.5]
-  N = 5
+  test_spacings = [0.1, .2, .3]
+  N = 7
   print(gen_spacing(N, test_spacings))
+  print(gen_spacing(N-1, test_spacings))
+  print(uniform_spacing(N, 0.1))
   pass
 
 if __name__ == "__main__":

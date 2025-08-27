@@ -1,14 +1,13 @@
 import numpy as np
-from scipy import signal
+from scipy.signal import find_peaks
 from scipy.constants import c
-from utils import linear_to_db
 
 def find_maximas(pattern : np.ndarray[float], theta: np.ndarray[float]):
-    peaks, _ = signal.find_peaks(pattern, width=5, rel_height=5)
+    peaks, _ = find_peaks(pattern, width=1, rel_height=1)
     return peaks
 
 def find_nulls(pattern : np.ndarray[float], theta: np.ndarray[float]):
-    nulls, _ = signal.find_peaks(-pattern)
+    nulls, _ = find_peaks(-pattern)
     return nulls
 
 def get_main_lobe(pattern, theta, nth):
@@ -20,7 +19,7 @@ def get_main_lobe(pattern, theta, nth):
     left_null_idx = nulls_idx[main_peak_idx > nulls_idx][-1]
     right_null_idx = nulls_idx[main_peak_idx < nulls_idx][0]
     
-    return np.arange(left_null_idx, right_null_idx)
+    return np.arange(left_null_idx, right_null_idx+1)
 
 def get_lobe(pattern, theta, nth = 0):
     peaks_idx = find_maximas(pattern, theta)
@@ -45,43 +44,76 @@ def get_lobe(pattern, theta, nth = 0):
     if right_null_idx != pattern.size: right_null_idx+=1
     return np.arange(left_null_idx, right_null_idx)
      
+def FNBW(pattern, theta, nth=0):
+    main_lobe = get_lobe(pattern, theta, nth)
+    if main_lobe.size == 0:
+        return 0
+    main_lobe_width = np.abs(theta[main_lobe[-1]] - theta[main_lobe[0]])
+    return main_lobe_width
+
+def HPBW(pattern, theta, nth=0):
+    main_lobe = get_lobe(pattern, theta, nth)
+    if main_lobe.size == 0:
+        return 0
+    if np.any(pattern[main_lobe] < 0):
+        threshold = np.max(pattern[main_lobe]) - 3
+    else:
+        threshold = np.max(pattern[main_lobe]) / 2
+    hp_lobe = np.where(pattern[main_lobe] >= threshold)[0]
+    if hp_lobe.size == 0:
+        return 0
+    hp_lobe_width = np.abs(theta[hp_lobe[-1]] - theta[hp_lobe[0]])
+    return hp_lobe_width
+
+def HPBW_bounds(pattern, theta, idx=False):
+    main_lobe = get_lobe(pattern, theta)
+    if main_lobe.size == 0:
+        return 0, 0
+    if np.any(pattern[main_lobe] < 0):
+        threshold = np.max(pattern[main_lobe]) - 3
+    else:
+        threshold = np.max(pattern[main_lobe]) / 2
+    hp_lobe = np.where(pattern[main_lobe] >= threshold)[0]
+    if hp_lobe.size == 0:
+        return 0, 0
+    if idx:
+        return main_lobe[hp_lobe[0]], main_lobe[hp_lobe[-1]]
+    return theta[main_lobe[hp_lobe[0]]], theta[main_lobe[hp_lobe[-1]]]
+
+def main_lobe_direction(pattern, theta):
+    main_lobe_idx = np.argmax(pattern)
+    return theta[main_lobe_idx]
 
 def main():
+    
+    from utils import get_pattern, linear_to_db
     import matplotlib.pyplot as plt
-    from utils import linear_to_db
-    from spacing import gen_spacing
-    from beam_steering import steer_to_phase    
-    from antenna_array import phase_shift, array_factor
-    from pattern import gen_rect_patter
+    
     theta = np.linspace(-np.pi/2, np.pi/2, 360)
     frequency = 2.4e9  # 1 GHz
-    # pattern_antenna = np.cos(theta) ** 2 * np.cos(theta / 2) ** 4
-    num_element = 7
+    num_element = 4
     n = 2
-    ant_pat = gen_rect_patter(theta, frequency)
-    sps = gen_spacing(num_element, np.array([0.2, 0.2, 0.2]) * (c / frequency))
-    sa = np.linspace(-np.pi/4, np.pi/4, 9)
-    b = steer_to_phase(num_element, sps, sa, frequency)
-    ps = phase_shift(sps, frequency, theta, b)
-    af = array_factor(np.ones(num_element), num_element, ps)
-    ap = ant_pat * np.abs(af[n, :])
+    ap = get_pattern(theta, frequency, num_element, 0.75, np.radians(np.linspace(0, 30, n)))[0, :]
     ap_db = linear_to_db(ap)
     
-    fig = plt.figure()
-    # plt.plot(theta, ap_db, "--k")
+    print(f'HPBW: {np.degrees(HPBW(ap_db, theta)):.2f}')
+    print(f'HPBW bounds: {np.degrees(HPBW_bounds(ap_db, theta))}')
+    print(f'FNBW: {np.degrees(FNBW(ap_db, theta)):.2f}')
+    print(f'Main lobe direction: {np.degrees(main_lobe_direction(ap_db, theta)):.2f} degrees')
+        
+    plt.plot(np.degrees(theta), ap_db, "--k")
     peak_idx = find_maximas(ap_db, theta)
-    plt.plot(theta[peak_idx], ap_db[peak_idx], "x")
+    plt.plot(np.degrees(theta[peak_idx]), ap_db[peak_idx], "x")
     null_idx = find_nulls(ap_db, theta)
-    plt.plot(theta[null_idx], ap_db[null_idx], "x")
+    plt.plot(np.degrees(theta[null_idx]), ap_db[null_idx], "x")
     
     main_idx = get_main_lobe(ap_db, theta, 0)
-    plt.plot(theta[main_idx], ap_db[main_idx], "r")
+    plt.plot(np.degrees(theta[main_idx]), ap_db[main_idx], "r")
     
-    print(f'{n}: {np.degrees(sa[n])} deg')
-    for i in np.arange(-2, 3):
-        main_idx = get_main_lobe(ap_db, theta, i)
-        plt.plot(theta[main_idx], ap_db[main_idx], ls=":")
+    bw = HPBW_bounds(ap_db, theta, idx=True)
+    plt.fill_between(np.degrees(theta[bw[0]:bw[1]]), ap_db[bw[0]:bw[1]], -60, color='red', alpha=0.2, label='HPBW')
     
+    plt.grid()
     plt.ylim((-60, 3))
     plt.show()
 

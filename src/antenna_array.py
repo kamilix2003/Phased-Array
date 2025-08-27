@@ -17,8 +17,7 @@ def phase_shift(spacings,
                 theta: np.ndarray[float],
                 beta: np.ndarray[float]
                 ) -> np.ndarray[float, float]:
-    
-    return 2 * np.pi * frequency / c * spacings[:, np.newaxis] * np.sin(theta) + beta[:, :, np.newaxis]
+    return 2 * np.pi * frequency / c * spacings[:, np.newaxis] * np.cos(theta - np.pi/2) + beta[:, :, np.newaxis]
 
 def array_factor(weights,
                  num_elements,
@@ -27,25 +26,6 @@ def array_factor(weights,
     
     array_response = weights[:, np.newaxis] * np.exp(1j * psi)
     return np.sum(array_response, axis=1) / num_elements
-
-# def symmetric_spacing(num_elements: int, spacing) -> np.ndarray[float]:
-#     if type(spacing) is not np.ndarray:
-#         spacing = np.array([spacing])
-#     if num_elements % 2 == 0:
-#         if len(spacing) == 1:
-#             return (np.arange(-num_elements//2, num_elements//2) + .5) * spacing
-#         elif len(spacing) == (num_elements // 2):
-#             return np.concatenate((-spacing[::-1], spacing))
-#         else:
-#             raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
-#     else:
-#         if len(spacing) == 1:
-#             return (np.arange(-(num_elements)//2 + 1, (num_elements+1)//2)) * spacing
-#         elif len(spacing) == (num_elements // 2):
-#             return np.concatenate((-spacing[::-1], [0], spacing))
-#         else:
-#             raise ValueError("Spacing must be a single value or an array of length num_elements // 2.")
-        
 
 def main():
     import matplotlib.pyplot as plt
