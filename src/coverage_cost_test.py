@@ -2,7 +2,7 @@ from antenna_array import array_factor, phase_shift
 from pattern import gen_rect_pattern
 from beam_steering import steer_to_phase, quantize_phase, gen_steer_directions
 from spacing import gen_spacing
-from cost import coverage_cost, beam_boundry_cost
+from cost import *
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,11 +18,11 @@ def main():
   fig = plt.figure(figsize=(10, 6))
   spacings = np.linspace(0.1, 1, 30)
   
-  beams = [2]
+  beams = [2, 4]
   for i, beam_count in enumerate(beams, start=1):
     ax = fig.add_subplot(len(beams), 1, i)
   
-    for N_elements in [2, 3, 4, 5, 8]:
+    for N_elements in [2, 4, 5]:
       cov_cost = []
       beta =  np.arange(beam_count)[:, np.newaxis] * np.arange(N_elements) * (np.pi / 2**4)
       weights = np.ones(N_elements)
@@ -32,7 +32,7 @@ def main():
         af = array_factor(weights, N_elements, psi)
         ap = np.abs(af) * element_pattern
         # cov_cost.append(coverage_cost(theta, ap, digital=False))
-        cov_cost.append(beam_boundry_cost(theta, ap))
+        cov_cost.append(coverage_cost_v3(theta, ap))
       
       ax.plot(spacings, cov_cost, marker='o', label=f'Coverage Cost N={N_elements}')
       ax.legend()

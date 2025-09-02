@@ -8,7 +8,7 @@ from beam_steering import steer_to_phase, quantize_phase, gen_steer_directions
 from spacing import gen_spacing
 from weights import gen_weights
 
-from cost import side_lobe_cost, coverage_cost
+from cost import *
 
 def optimize_pattern(x,
                      theta,
@@ -22,7 +22,9 @@ def optimize_pattern(x,
   x_weights = x[1]
   
   spacing = np.array([x_spacing])
-  weights = np.ones(N_elements)
+  weights = np.hamming(N_elements)
+  print(weights)
+  weights *= x_weights
   
   d = gen_spacing(N_elements, spacing) * c / frequency
   sa = gen_steer_directions(N_elements, step=scan_step)
@@ -34,9 +36,9 @@ def optimize_pattern(x,
   cov_cost = 0
   
   for i in range(ap.shape[0]):
-    # sll_cost += side_lobe_cost(theta, ap[i, :], threshold=-5)
+    sll_cost += side_lobe_cost(theta, ap[i, :], threshold=0.1)
     pass
-  cov_cost += coverage_cost(theta, ap)
+  cov_cost += coverage_cost_v3(theta, ap)
   
   spacing_cost = 0
   # spacing_cost = np.clip((spacing - 0.5), 0, None)
@@ -62,7 +64,7 @@ def main():
   f = 2.4e9
   
   ep = gen_rect_pattern(theta, f)
-  scan_step = 2
+  scan_step = 3
   
   n = 5
   

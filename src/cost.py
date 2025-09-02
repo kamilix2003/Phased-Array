@@ -31,7 +31,7 @@ def side_lobe_cost(theta, pattern, threshold=0.01):
       return 0  # Side lobes are below the threshold
     return np.abs(linear_to_db(l_max) - threshold) + np.abs(linear_to_db(r_max) - threshold)
 
-def beam_boundry_cost(theta, pattern):
+def coverage_cost_v1(theta, pattern):
   if pattern.shape[0] < 2:
     raise ValueError("Pattern must have at least two steer angles for coverage cost calculation.")
   cost = np.zeros(pattern.shape[0] - 1)
@@ -41,7 +41,7 @@ def beam_boundry_cost(theta, pattern):
   return np.abs(np.sum(cost))
   pass
 
-def coverage_cost(theta, pattern, thershold = .707, digital=False):
+def coverage_cost_v2(theta, pattern, thershold = .707, digital=False):
   if pattern.shape[0] < 2:
     raise ValueError("Pattern must have at least two steer angles for coverage cost calculation.")
   overlap = np.zeros_like(pattern, dtype=float)
@@ -73,6 +73,24 @@ def coverage_cost(theta, pattern, thershold = .707, digital=False):
   else:
     return np.average(np.abs(np.prod(overlap + 1, axis=0))-1)
   
+def coverage_cost_v3(theta, pattern):
+  if pattern.shape[0] < 2:
+    raise ValueError("Pattern must have at least two steer angles for coverage cost calculation.")
+    
+  sum_pattern = np.sum(pattern, axis=0)
+  prod_pattern = np.prod(pattern + 1, axis=0) - 1
+  cost = np.abs(prod_pattern - sum_pattern)
+  
+  # import matplotlib.pyplot as plt
+    
+  # plt.subplot(311).plot(np.degrees(theta), sum_pattern, label='Pattern Product')
+  # plt.subplot(312).plot(np.degrees(theta), prod_pattern, label='Pattern Product')
+  # plt.subplot(313).plot(np.degrees(theta), cost, label='Pattern Product')
+  # plt.show()
+  
+  return np.average(cost)
+  pass
+  
 def main():
 
   import matplotlib.pyplot as plt
@@ -88,20 +106,22 @@ def main():
   
   theta = np.linspace(-np.pi/2, np.pi/2, 360)
   frequency = 2.4e9  # 2.4 GHz
-  num_elements = 6
-  uni_spacing = gen_spacing(num_elements, [0.75]) * c / frequency
-  beta = gen_steer_directions(num_elements, 4, step=1)
+  num_elements = 5
+  uni_spacing = gen_spacing(num_elements, [0.5]) * c / frequency
+  beta = gen_steer_directions(num_elements, 4, step=3)
     
   ap = get_pattern(theta, frequency, num_elements, uni_spacing, beta)
   ap_db = linear_to_db(ap)
-  
+    
   print(f'HPBW: {pm.HPBW(ap[0, :], theta)}')
   print(f'Side lobe cost: {side_lobe_cost(theta, ap[0, :])}')
   
   print(f'HPBW: {pm.HPBW(ap[1, :], theta)}')
   print(f'Side lobe cost: {side_lobe_cost(theta, ap[1, :])}')
   
-  print(f'coverage cost: {coverage_cost(theta, ap, digital=True)}')
+  print(f'coverage cost v1: {coverage_cost_v1(theta, ap)}')
+  print(f'coverage cost v2: {coverage_cost_v2(theta, ap, digital=False)}')
+  print(f'coverage cost v3: {coverage_cost_v3(theta, ap)}')
   
   fig, ax = plt.subplots()
   for i in range(ap.shape[0]):
