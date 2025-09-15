@@ -72,7 +72,7 @@ def HPBW_bounds(pattern, theta, idx=False):
     if np.any(pattern[main_lobe] < 0):
         threshold = np.max(pattern[main_lobe]) - 3
     else:
-        threshold = np.max(pattern[main_lobe]) / 2
+        threshold = np.max(pattern[main_lobe]) * .5
     hp_lobe = np.where(pattern[main_lobe] >= threshold)[0]
     if hp_lobe.size == 0:
         return 0, 0
@@ -83,6 +83,21 @@ def HPBW_bounds(pattern, theta, idx=False):
 def main_lobe_direction(pattern, theta):
     main_lobe_idx = np.argmax(pattern)
     return theta[main_lobe_idx]
+
+def SLL(pattern, theta):
+    
+    main_lobe = get_lobe(pattern, theta)
+    if main_lobe.size == 0:
+        return 0
+    side_lobes = np.setdiff1d(np.arange(pattern.size), main_lobe)
+    if side_lobes.size == 0:
+        return 0
+    sll = np.max(pattern[side_lobes])
+    if np.any(pattern < 0):
+        sll_db = sll - np.max(pattern[main_lobe])
+    else:
+        sll_db = 10 * np.log10(sll / np.max(pattern[main_lobe]))
+    return sll_db
 
 def main():
     

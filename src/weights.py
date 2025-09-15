@@ -1,3 +1,4 @@
+
 import numpy as np
 
 def gen_weights(N_elements, weights):
@@ -22,6 +23,30 @@ def gen_weights(N_elements, weights):
     
     return out
   
+def generate_all_windows(n_elements, window_kwargs=None):
+    import inspect
+    from scipy.signal import windows as sp_windows
+    if window_kwargs is None:
+        window_kwargs = {}
+    result = {}
+    # Get all callables in scipy.signal.windows that take at least one positional arg
+    for name, func in inspect.getmembers(sp_windows, inspect.isfunction):
+        # Only include functions that have n as first arg
+        sig = inspect.signature(func)
+        params = list(sig.parameters.values())
+        if not params or params[0].name not in ('M', 'N', 'numtaps', 'n', 'window_len'):
+            continue
+        # Prepare kwargs for this window
+        kwargs = window_kwargs.get(name, {})
+        try:
+            arr = func(n_elements, **kwargs)
+            result[name] = arr
+        except Exception:
+            # Skip windows that error out for given n_elements/kwargs
+            continue
+    return result
+    
+  
 def main():
     N_elements = 6
     weights = [1.0, 0.8, 0.9]
@@ -33,6 +58,19 @@ def main():
     weights = [1.0, 0.8, 0.9]
     generated_weights = gen_weights(N_elements, weights)
     print("Generated Weights for odd N_elements:\n", generated_weights)
+    
+    from matplotlib import pyplot as plt
+    from scipy.signal import windows
+    
+    tukey =  windows.tukey(N_elements, alpha=0.5)
+    HFT90D = [1, 1.942604, 1.340318, 0.440811, 0.043097]
+    weights = windows.general_cosine(N_elements, HFT90D)
+    
+    plt.plot(weights, label='tukey')
+    plt.legend()
+    plt.grid()
+    plt.show()
+    
     
 if __name__ == "__main__":
     main()

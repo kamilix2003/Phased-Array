@@ -8,10 +8,13 @@ def quantize_phase(phase, shift_bits, max_shift=2 * np.pi):
   lsb = 2 * np.pi / (2 ** shift_bits)
   return np.min([np.round(phase / lsb) * lsb, np.ones_like(phase) * max_shift], axis=0)
 
-def gen_steer_directions(N, shift_bits=4, step = 1):
-  if N == 2:
-    return (np.arange(N) * (2 * np.pi / (2 ** shift_bits)) * (np.arange(-1, (2 ** shift_bits) // 2 - 1) + 1)[:, np.newaxis])[::step, :]
-  return (np.arange(N) * (2 * np.pi / (2 ** shift_bits)) * (np.arange(-1, (2**shift_bits) // (N - 1)) + 1)[:, np.newaxis])[::step, :]
+def gen_steer_directions(N, shift_bits=4, step = 1, symmetric=True, extend=0):
+  out = (np.arange(N) * (2 * np.pi / (2 ** shift_bits)) * (np.arange(-1, (2**shift_bits) // (N - 1)) + 1 + extend)[:, np.newaxis])[::step, :]
+  if symmetric:
+    out = np.concatenate([out, -out], axis=0)
+    out = np.unique(out, axis=0)
+    out = out[np.argsort(np.abs(out[:, 0])), :]
+  return out
     
 def __steer_directions_count(N, shift_bits):
   return (2 ** shift_bits) // (N - 1)
