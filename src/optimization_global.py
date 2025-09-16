@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.constants import c
 
-from optimization import optimize_pattern
+from optimization import optimize_pattern, get_log_dict
 
 from scipy.optimize import basinhopping
 from pattern import gen_rect_pattern
@@ -14,9 +14,9 @@ def main():
   f = 2.4e9
   
   ep = gen_rect_pattern(theta, f)
-  scan_step = 3
+  scan_step = 1
   
-  n = 5
+  n = 8
   
   d_initial = np.random.uniform(low=0.1, high=0.95)
   d_bounds = np.array([(0.1, 1.0)])
@@ -28,15 +28,7 @@ def main():
   
   print(x_bounds, x_initial)
   
-  opt_log = {
-    "iteration": [],
-    "bandwidth": [],
-    "spacing": [],
-    "weights": [],
-    "sll_cost": [],
-    "cov_cost": [],
-    "total_cost": []
-  }
+  opt_log = get_log_dict()
   
   opt_results = basinhopping(
     func=lambda x: optimize_pattern(x, 
@@ -48,7 +40,7 @@ def main():
                                    log = opt_log),
     x0=x_initial,
     # bounds=x_bounds,
-    minimizer_kwargs={"method": "Powell", "bounds": x_bounds},
+    minimizer_kwargs={"method": "Nelder-Mead", "bounds": x_bounds},
     niter=100,
     # method="SLSQP"
     # method="COBYLA"
@@ -59,29 +51,38 @@ def main():
   print(opt_results)
     
   from utils import get_pattern
-  from plotting import plot_pattern, fill_HPBW
+  from plotting import plot_pattern, fill_HPBW, summerize_pattern, plot_array_layout, plot_element_pattern
   from beam_steering import gen_steer_directions
   
   d = gen_spacing(n, [opt_results.x[0]]) * c / f
   
   pattern = get_pattern(theta, f, n, d, gen_steer_directions(n, step=scan_step))
   fig = plt.figure(figsize=(10, 6))
-  ax = fig.add_subplot(3, 2, (1, 2))
+  ax = fig.add_subplot(3, 3, (1, 5))
   plot_pattern(ax, pattern, theta)
   fill_HPBW(ax, theta, pattern)
-  ax = fig.add_subplot(3, 2, 3)
+  plot_element_pattern(ax, ep, theta)
+  ax = fig.add_subplot(3, 3, 3)
+  ax.plot(opt_log['iteration'], opt_log['spacing'], label='spacing (λ)')
+  ax.set_ylim(0, 1)
+  ax.legend()
+  ax = fig.add_subplot(3, 3, 6)
+  ax.plot(opt_log['iteration'], opt_log['cost']['sll'], label='SLL Cost')
+  ax.plot(opt_log['iteration'], opt_log['cost']['cov'], label='Coverage Cost')
   ax.plot(opt_log['iteration'], opt_log['total_cost'], label='Total Cost')
   ax.legend()
-  ax = fig.add_subplot(3, 2, 4)
-  ax.plot(opt_log['iteration'], opt_log['spacing'], label='spacing (λ)')
-  ax.plot(opt_log['iteration'], opt_log['weights'], label='weights')
+  ax = fig.add_subplot(3, 3, 7)
+  plot_array_layout(ax, n, d, center=True)
+  ax = fig.add_subplot(3, 3, 8)
+  from cost import coverage_cost
+  ax.plot(theta, coverage_cost(theta, pattern, cost_pattern=True),
+          label=f'Coverage Cost: {coverage_cost(theta, pattern):.4f}')
   ax.legend()
-  ax = fig.add_subplot(3, 2, (5, 6))
-  ax.plot(opt_log['iteration'], opt_log['cov_cost'], label='Coverage Cost')
-  ax.plot(opt_log['iteration'], opt_log['sll_cost'], label='SLL Cost')
-  ax.legend()
-  
+    
   plt.show()
+  
+  print("Optimized Spacing (λ):", opt_results.x[0])
+  summerize_pattern(pattern, theta, print=True)
     
   pass
 

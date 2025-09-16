@@ -166,12 +166,10 @@ def coverage_cost_v4(theta, pattern, thershold = .5, cost_pattern = False):
     raise ValueError("Pattern must have at least two steer angles for coverage cost calculation.")
     
   pattern_main = np.zeros_like(pattern)
-  l_bound, r_bound = theta.size - 1, 0
   for i in range(pattern.shape[0]):
     main_lobe = pm.get_lobe(pattern[i, :], theta)
     thershold_mask = pattern[i, main_lobe] >= thershold * np.max(pattern[i, :])
     main_lobe = main_lobe[thershold_mask]
-    l_bound, r_bound = min(l_bound, main_lobe[0]), max(r_bound, main_lobe[-1])
     pattern_main[i, main_lobe] = pattern[i, main_lobe]
   
   beam_count = pattern.shape[0]
@@ -181,17 +179,16 @@ def coverage_cost_v4(theta, pattern, thershold = .5, cost_pattern = False):
   max_pattern = np.max(pattern_main, axis=0) / beam_count
   cost = np.abs(sum_pattern - max_pattern)
   
-  # cost[l_bound:r_bound+1][sum_pattern[l_bound:r_bound+1] == 0] = 1
-  # cost *= np.sum(cost) / (r_bound - l_bound + 1)
-    
     
   if debug:
     import matplotlib.pyplot as plt
       
     plt.figure(figsize=(8, 6))
-      
+    plt.title('Coverage Cost v4 Debug')
     plt.subplot(411).plot(np.degrees(theta), sum_pattern, label='Pattern Sum')
     plt.subplot(412).plot(np.degrees(theta), max_pattern, label='Pattern Max')
+    for i in range(pattern.shape[0]):
+      plt.subplot(413).plot(np.degrees(theta), np.abs(pattern_main[i, :]), label='Pattern main')
     plt.subplot(414).plot(np.degrees(theta), cost, label='Pattern Cost')
     plt.legend()
     plt.show()
@@ -231,8 +228,8 @@ def main():
   
   theta = np.linspace(-np.pi/2, np.pi/2, 360)
   frequency = 2.4e9  # 2.4 GHz
-  num_elements = 6
-  uni_spacing = gen_spacing(num_elements, [0.75]) * c / frequency
+  num_elements = 5
+  uni_spacing = gen_spacing(num_elements, [0.65]) * c / frequency
   beta = gen_steer_directions(num_elements, 4, step=3)
     
   ap = get_pattern(theta, frequency, num_elements, uni_spacing, beta)

@@ -34,6 +34,7 @@ def optimize_pattern(x,
   
   d = gen_spacing(N_elements, spacing) * c / frequency
   weights = np.ones(N_elements)
+  weights = np.array(x[1:]) if len(x) > 1 else weights
   
   sa = gen_steer_directions(N_elements, step=scan_step, extend=1)
   psi = phase_shift(d, frequency, theta, sa);

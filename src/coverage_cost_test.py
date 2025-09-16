@@ -32,7 +32,7 @@ def main():
         af = array_factor(weights, N_elements, psi)
         ap = np.abs(af) * element_pattern
         # cov_cost.append(coverage_cost_v2(theta, ap, digital=False))
-        cov_cost.append(coverage_cost_v3(theta, ap))
+        cov_cost.append(coverage_cost(theta, ap))
       
       ax.plot(spacings, cov_cost, marker='o', label=f'Coverage Cost N={N_elements}')
       ax.legend()
