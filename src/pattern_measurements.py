@@ -81,7 +81,10 @@ def HPBW_bounds(pattern, theta, idx=False):
     return theta[main_lobe[hp_lobe[0]]], theta[main_lobe[hp_lobe[-1]]]
 
 def main_lobe_direction(pattern, theta):
-    main_lobe_idx = np.argmax(pattern)
+    if pattern.ndim == 2:
+        main_lobe_idx = np.argmax(pattern, axis=1)
+    else:
+        main_lobe_idx = np.argmax(pattern)
     return theta[main_lobe_idx]
 
 def SLL(pattern, theta):
