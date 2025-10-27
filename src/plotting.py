@@ -32,35 +32,73 @@ def summerize_pattern(pattern, theta, print=False):
   
   return summery 
 
-def plot_pattern(ax: plt.axis, pattern, theta):
+def plot_pattern(ax: Axes, pattern, theta, decibel=True, element_pattern=None):
   
   import pattern_measurements as pm
     
   from utils import linear_to_db
   
+  if pattern.ndim == 2:
+    pattern = pattern[0, :]
+  
   pattern_db = linear_to_db(pattern)
   theta_deg = np.degrees(theta)
   
-  ylim = (-40, 3)
+  if decibel:
+    ylim = (-20, 1)
+  else:
+    ylim = (0, 1.05)
   
   if ax.name == 'polar':
       ax.set_theta_zero_location("N")
       ax.set_theta_direction(-1)
       ax.set_thetalim(np.radians([-90, 90]))
       ax.set_rlim(ylim)
+
+  threshold = 0.5 if not decibel else -3
+  fnbw_idx = pm.get_lobe(pattern, theta)
+  fnbw = np.abs(theta[fnbw_idx[-1]] - theta[fnbw_idx[0]])
+  if decibel:
+    hpbw_idx = fnbw_idx[pattern_db[fnbw_idx] > (np.max(pattern_db) + threshold)]
+  else:
+    hpbw_idx = fnbw_idx[pattern[fnbw_idx] > threshold * np.max(pattern)]
+  hpbw = np.abs(theta[hpbw_idx[-1]] - theta[hpbw_idx[0]])
   
-  for i in range(pattern_db.shape[0]):
+  pattern_wo_main = np.copy(pattern)
+  pattern_wo_main[fnbw_idx] = 0
+  side_lobe_peak_idx = np.argmax(pattern_wo_main)
+  main_lobe_peak_idx = np.argmax(pattern)
+  
+  if decibel:
+    ax.plot(theta_deg, pattern_db, label=f'direction: {np.degrees(pm.main_lobe_direction(pattern_db, theta)):.2f} deg')
+    ax.plot(theta_deg[fnbw_idx], pattern_db[fnbw_idx], color='red', alpha=0.5, label=f'FNBW: {np.degrees(fnbw):.2f} deg')
+    ax.plot(theta_deg[hpbw_idx], pattern_db[hpbw_idx], color='green', alpha=1, label=f'HPBW: {np.degrees(hpbw):.2f} deg')
+    ax.hlines(pattern_db[side_lobe_peak_idx], xmin=theta_deg[side_lobe_peak_idx], xmax=theta_deg[main_lobe_peak_idx], color='black', linestyle='--', alpha=0.5, label=f'SLL/GLL: {pattern_db[side_lobe_peak_idx]:.2f} dB')
+    ax.vlines(theta_deg[main_lobe_peak_idx], pattern_db[side_lobe_peak_idx], pattern_db[main_lobe_peak_idx],
+              color='black', linestyle='--', alpha=0.5, label=f'ML-SL/GL distance: {np.abs(theta_deg[main_lobe_peak_idx]-theta_deg[side_lobe_peak_idx]):.2f} deg')
+  else:
+    ax.plot(theta_deg, pattern, label=f'direction: {np.degrees(pm.main_lobe_direction(pattern, theta)):.2f} deg')
+    ax.plot(theta_deg[fnbw_idx], pattern[fnbw_idx], color='red', alpha=0.5, label=f'FNBW: {np.degrees(fnbw):.2f} deg')
+    ax.plot(theta_deg[hpbw_idx], pattern[hpbw_idx], color='green', alpha=1, label=f'HPBW: {np.degrees(hpbw):.2f} deg')
+    ax.hlines(pattern[side_lobe_peak_idx], xmin=theta_deg[side_lobe_peak_idx], xmax=theta_deg[main_lobe_peak_idx], color='black', linestyle='--', alpha=0.5, label=f'SLL/GLL: {pattern[side_lobe_peak_idx]:.2f}')
+    ax.vlines(theta_deg[main_lobe_peak_idx], pattern[side_lobe_peak_idx], pattern[main_lobe_peak_idx],
+              color='black', linestyle='--', alpha=0.5, label=f'ML-SL/GL distance: {np.abs(theta_deg[main_lobe_peak_idx]-theta_deg[side_lobe_peak_idx]):.2f} deg')
     
-    if ax.name == 'polar':
-      ax.plot(theta, pattern_db[i, :], label=f'angle: {np.degrees(pm.main_lobe_direction(pattern_db[i, :], theta)):.2f} deg')
+  if element_pattern is not None:
+    ep_db = linear_to_db(element_pattern)
+    if decibel:
+      ax.plot(theta_deg, ep_db, label='Element Pattern', alpha=0.5, linestyle='--', color='black')
     else:
-      ax.plot(theta_deg, pattern_db[i, :], label=f'angle: {np.degrees(pm.main_lobe_direction(pattern_db[i, :], theta)):.2f} deg')
+      ax.plot(theta_deg, element_pattern, label='Element Pattern', alpha=0.5, linestyle='--', color='black')
+      
   
+  
+
   ax.set_ylim(ylim)
   ax.legend()
   ax.grid(True)
   ax.set_xlabel('Theta (degrees)')
-  ax.set_ylabel('Array Pattern (dB)')
+  ax.set_ylabel('Array Pattern (dB)' if decibel else 'Array Pattern (linear)')
   
 def plot_element_pattern(ax: Axes, element_pattern, theta):
   

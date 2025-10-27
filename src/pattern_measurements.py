@@ -3,11 +3,23 @@ from scipy.signal import find_peaks
 from scipy.constants import c
 
 def find_maximas(pattern : np.ndarray[float], theta: np.ndarray[float]):
-    peaks, _ = find_peaks(pattern, width=1, rel_height=1)
+    if pattern.ndim ==2:
+        peaks = np.zeros((pattern.shape[0],), dtype=float)
+        for i in range(pattern.shape[0]):
+            temp, _ = find_peaks(pattern[i, :], width=1, rel_height=1)
+            peaks[i] = temp[0]
+    else:
+        peaks, _ = find_peaks(pattern, width=1, rel_height=1)
     return peaks
 
 def find_nulls(pattern : np.ndarray[float], theta: np.ndarray[float]):
-    nulls, _ = find_peaks(-pattern)
+    if pattern.ndim ==2:
+        nulls = np.zeros((pattern.shape[0],), dtype=float)
+        for i in range(pattern.shape[0]):
+            temp, _ = find_peaks(-pattern[i, :])
+            nulls[i] = temp[0]
+    else:
+        nulls, _ = find_peaks(-pattern)
     return nulls
 
 def get_main_lobe(pattern, theta, nth):
@@ -15,7 +27,6 @@ def get_main_lobe(pattern, theta, nth):
     nulls_idx = find_nulls(pattern, theta)
     
     main_peak_idx = peaks_idx[np.argmax(pattern[peaks_idx])]
-    print(peaks_idx, nulls_idx, main_peak_idx)
     left_null_idx = nulls_idx[main_peak_idx > nulls_idx][-1]
     right_null_idx = nulls_idx[main_peak_idx < nulls_idx][0]
     
@@ -45,6 +56,13 @@ def get_lobe(pattern, theta, nth = 0):
     return np.arange(left_null_idx, right_null_idx)
      
 def FNBW(pattern, theta, nth=0):
+    
+    if pattern.ndim ==2:
+        out = np.zeros((pattern.shape[0],))
+        for i in range(pattern.shape[0]):
+            out[i] = FNBW(pattern[i, :], theta, nth)
+        return out
+    
     main_lobe = get_lobe(pattern, theta, nth)
     if main_lobe.size == 0:
         return 0
@@ -52,6 +70,13 @@ def FNBW(pattern, theta, nth=0):
     return main_lobe_width
 
 def HPBW(pattern, theta, nth=0):
+    
+    if pattern.ndim ==2:
+        out = np.zeros((pattern.shape[0],))
+        for i in range(pattern.shape[0]):
+            out[i] = HPBW(pattern[i, :], theta, nth)
+        return out
+    
     main_lobe = get_lobe(pattern, theta, nth)
     if main_lobe.size == 0:
         return 0
