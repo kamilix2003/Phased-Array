@@ -30,7 +30,7 @@ def main():
 
   from pattern_measurements import HPBW
   
-  N = 5  # number of antenna elements
+  N = 4  # number of antenna elements
   theta = np.linspace(-np.pi/2, np.pi/2, 361)  # angle space
   frequency = 2.4e9  # frequency in Hz
   shift_bits = 4 # number of bits for phase shift
@@ -45,6 +45,7 @@ def main():
   print(f"Weights: {weights}")
 
   d_list = np.linspace(1, 2**shift_bits, 64)[:, np.newaxis] * np.arange(N) * lsb_shift_m  # element spacing
+  d_list = d_list[6:]
 
   steer_angle = np.zeros((d_list.shape[0], beta.shape[0]))
   peak_amplitude = np.zeros((d_list.shape[0], beta.shape[0]))

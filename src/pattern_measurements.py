@@ -105,12 +105,18 @@ def HPBW_bounds(pattern, theta, idx=False):
         return main_lobe[hp_lobe[0]], main_lobe[hp_lobe[-1]]
     return theta[main_lobe[hp_lobe[0]]], theta[main_lobe[hp_lobe[-1]]]
 
-def main_lobe_direction(pattern, theta):
+def main_lobe_direction(pattern, theta, format='radians'):
     if pattern.ndim == 2:
         main_lobe_idx = np.argmax(pattern, axis=1)
     else:
         main_lobe_idx = np.argmax(pattern)
-    return theta[main_lobe_idx]
+    
+    if format == 'radians':
+        return theta[main_lobe_idx]
+    elif format == 'degrees':
+        return np.degrees(theta[main_lobe_idx])
+    else:
+        raise ValueError("format must be 'radians' or 'degrees'")
 
 def SLL(pattern, theta):
     

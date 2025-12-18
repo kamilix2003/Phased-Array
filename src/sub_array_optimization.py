@@ -4,7 +4,7 @@ import numpy as np
 from scipy.constants import c
 
 from antenna_array import array_factor, phase_shift
-from pattern import gen_rect_pattern
+from pattern import gen_rect_pattern,gen_patch_pattern
 
 from plotting import *
 from pattern_measurements import *
@@ -43,7 +43,8 @@ def calculate_element_positions(num_of_sub_arrays, sub_array_size, major_spacing
   return element_positions
 
 def side_grating_level(pattern: np.ndarray,
-                     theta: np.ndarray,):
+                        theta: np.ndarray,
+                        scale = "linear"):
   out = np.zeros((pattern.shape[0],))
   for i in range(pattern.shape[0]):
     main_lobe = get_lobe(pattern[i, :], theta)
@@ -69,7 +70,9 @@ def main_lobe_quality(pattern: np.ndarray,
 def generate_patterns(phase_shifts,
                       major_spacing = .5,
                       minor_spacing = .5,
-                      number_of_bits = 4):
+                      number_of_bits = 4,
+                      operation_frequency = 2.4e9,
+                      spacing_unit = 'wavelength'):
   theta = np.linspace(-np.pi/2, np.pi/2, 360)
     
   num_of_sub_arrays = 2
@@ -77,16 +80,20 @@ def generate_patterns(phase_shifts,
   
   phase_shifts = (phase_shifts / (2**number_of_bits) * 2 * np.pi).astype(np.float64)
   
-  element_positions = calculate_element_positions(num_of_sub_arrays, sub_array_size, major_spacing, minor_spacing) * (c / 2.4e9)  # convert to meters
+  if spacing_unit == 'wavelength':
+    element_positions = calculate_element_positions(num_of_sub_arrays, sub_array_size, major_spacing, minor_spacing) * (c / operation_frequency)  # convert to meters
+  elif spacing_unit == 'meters':
+    element_positions = calculate_element_positions(num_of_sub_arrays, sub_array_size, major_spacing, minor_spacing)
   
   af = array_factor(weights=np.ones(num_of_sub_arrays*sub_array_size),
                     num_elements=num_of_sub_arrays*sub_array_size,
                     psi=phase_shift(spacings=element_positions,
-                                    frequency=2.4e9,
+                                    frequency=operation_frequency,
                                     theta=theta,
                                     beta=phase_shifts))
   
-  ep = gen_rect_pattern(theta=theta, freq=2.4e9)
+  # ep = gen_rect_pattern(theta=theta, freq=operation_frequency)
+  ep = gen_patch_pattern(theta)
   ap = ep * np.abs(af)
   
   return ap, ep, theta
@@ -125,16 +132,19 @@ def generate_dataframe_results(array_pattern, element_pattern, theta, number_of_
 
 def main():
   
-  nb = 3
+  nb = 2
   
   # ps = sub_array_all_phase_shifts(sub_array_size=2, sub_array_count=2, num_of_bits=4)
   ps = get_all_phase_shifts(num_elements=4, num_of_bits=nb)
+
+  test = calculate_element_positions(num_of_sub_arrays=2, sub_array_size=2, major_spacing=100e-3, minor_spacing=50e-3)
+  print(test)
 
   ap, ep, theta = generate_patterns(phase_shifts=ps, major_spacing=.5, minor_spacing=1, number_of_bits=nb)
   df = generate_dataframe_results(ap, ep, theta)
 
   max_sweep_angle = 90
-  bin_count = 31
+  bin_count = 64
   
   bin_width = (2 * max_sweep_angle) / bin_count
   print(f'Bin width: {bin_width} degrees')
@@ -147,13 +157,8 @@ def main():
   print(bins.shape)
 
   for i, bin_df in enumerate(bins):
-    
-    if bin_df.empty:
-      continue
-    
-    bin_df["Score"] = bin_df["Side Grating Level"] + bin_df["Main Lobe Quality"]
+    pass    
 
-  pass
 
 
 if __name__ == "__main__":
