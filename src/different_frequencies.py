@@ -5,19 +5,16 @@ from scipy.constants import c
 
 from antenna_array import phase_shift, array_factor
 from pattern import gen_patch_pattern
-from pattern_measurements import (main_lobe_direction, get_lobe, HPBW, SLL)
-
-from pattern_import import RadiationPattern
+from pattern_measurements import (main_lobe_direction, get_lobe)
 
 def main():    
   
   N = 4
   n_bits = 4
   lsb_shift = 2 * np.pi / (2 ** n_bits)
-  theta = np.linspace(-np.pi/2, np.pi/2, 361)
+  theta = np.linspace(-np.pi/2, np.pi/2, 360)
   # theta = np.linspace(-np.pi, np.pi, 360)
-  # fs = np.array([2.4e9, 3e9])
-  fs = np.array([2.4e9])
+  fs = np.array([2.4e9, 2.5e9, 3e9, 3.5e9])
   line_styles = ['-', '--', ':', '-.']
   line_colors = [f"C{i}" for i in range(20)]
   ep = gen_patch_pattern(theta)
@@ -35,11 +32,6 @@ def main():
   axs = fig.subplots(beta.shape[0] // cols, cols, sharex=True)
   axs = axs.flatten()
     
-    
-  beam_directions = []
-  hpbw_values = []
-  side_lobe_levels = []
-  
   for i, f in enumerate(fs):
     af = array_factor(weights, N, 
                       phase_shift(d, f, theta, beta))
@@ -47,21 +39,14 @@ def main():
     ap_db = 20 * np.log10(ap / np.max(ap))
     for b in range(beta.shape[0]):
       ax = axs[b]
-      # beam_directions.append(main_lobe_direction(ap_db[b, :], theta, format='degrees'))
-      # main_lobe = get_lobe(ap_db[b, :], theta)
-      # hpbw = main_lobe[ap_db[b, main_lobe] > -3]
-      # hpbw = np.degrees(np.abs(theta[hpbw[-1]] - theta[hpbw[0]]))
-      # hpbw_values.append(hpbw)
-      hpbw_values.append(HPBW(ap_db[b, :], theta))
-      side_lobe_levels.append(SLL(ap_db[b, :], theta))
-      ax.plot(np.degrees(theta), ep_db, color='black', linewidth=.5, linestyle='--')
-      ax.plot(np.degrees(theta), ap_db[b, :], label=f'f={f/1e9} GHz, beam direction={main_lobe_direction(ap_db[b, :], theta, format='degrees'):.1f} degrees', linestyle=line_styles[i], color=line_colors[b])
+      
+      ax.plot((theta), ep_db, color='black', linewidth=.5, linestyle='--')
+      ax.plot((theta), ap_db[b, :], label=f'f={f/1e9} GHz, beam direction={main_lobe_direction(ap_db[b, :], theta, format='degrees'):.1f} degrees', linestyle=line_styles[i], color=line_colors[b])
       ax.legend(loc='upper right', fontsize='small')
       ax.set_title(f'Phase shift step: {np.degrees(lsb_shift * (b)):.1f} degrees, control bytes: {[f"0x{int(s):01x}" for s in (beta[b, :] // lsb_shift)%16]}')
       ax.set_ylim(-30, 3)
       ax.grid()
     
-  print(np.array(beam_directions), np.array(hpbw_values), np.array(side_lobe_levels))
   
   plt.show()
       

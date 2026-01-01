@@ -128,6 +128,7 @@ def SLL(pattern, theta):
         return 0
     sll = np.max(pattern[side_lobes])
     if np.any(pattern < 0):
+        print(sll, np.max(pattern[main_lobe]))
         sll_db = sll - np.max(pattern[main_lobe])
     else:
         sll_db = 10 * np.log10(sll / np.max(pattern[main_lobe]))

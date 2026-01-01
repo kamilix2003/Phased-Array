@@ -1,0 +1,182 @@
+! Touchstone file exported from HFSS 2025.2.0
+!        File:           C:/Users/kamaj/Documents/Ansoft/antennas.aedt
+!        Generated:      02:57:29 AM Dec 28, 2025
+!        Design:         original_design_rogers
+!        Project:        antennas
+!        Setup:          Setup
+!        Solution:       Sweep
+!
+! Variables:
+!        QW = 150mm
+!        air_x = 200mm
+!        air_y = 200mm
+!        air_z = 200mm
+!        antenna_substrate_length = 30mm
+!        circ_patch_length = 2.85mm
+!        feed_short = 0.1mm
+!        feed_substrate_length = 30mm
+!        feed_taper_length = 2.85mm
+!        feed_width = 1.1mm
+!        patch_feed_width = 0.5mm
+!        patch_ground_spacing = 0.5mm
+!        patch_length = 20mm
+!        patch_width = 14mm
+!        substrate_height = 0.508mm
+!        substrate_width = 50mm
+!
+# GHz S MA R 50.000000
+! Terminal data exported
+! Port[1] = rect_patch_T1
+1.5                            0.864433339383372 109.836587753841 
+! Gamma         0                0                
+! Port Impedance         50               0                
+1.56                           0.827319727721106 97.7232944959844 
+! Gamma         0                0                
+! Port Impedance         50               0                
+1.62                           0.783863393485907 85.3798559385112 
+! Gamma         0                0                
+! Port Impedance         50               0                
+1.68                           0.734535311836492 72.8437489183889 
+! Gamma         0                0                
+! Port Impedance         50               0                
+1.74                           0.680257417818013 60.1572737651202 
+! Gamma         0                0                
+! Port Impedance         50               0                
+1.8                            0.622314507606123 47.3587064672472 
+! Gamma         0                0                
+! Port Impedance         50               0                
+1.86                           0.562187496560685 34.4732249076006 
+! Gamma         0                0                
+! Port Impedance         50               0                
+1.92                           0.501360897082327 21.5057169666709 
+! Gamma         0                0                
+! Port Impedance         50               0                
+1.98                           0.441163473112233 8.43661062617393 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.04                           0.382680111992944 -4.77973934688182 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.1                            0.326740901048182 -18.2163966073107 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.16                           0.273967824901943 -31.9793328043007 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.22                           0.224848761032825 -46.2248678389069 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.28                           0.179812633425659 -61.2040414887502 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.34                           0.139297913176512 -77.3661388886501 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.4                            0.103845032623963 -95.5959621551809 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.46                           0.0743246394689505 -117.737008263253 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.52                           0.0525491941061587 -147.31755584113 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.58                           0.0419200288766243 173.09813382351  
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.64                           0.0438676928621721 132.965988287823 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.7                            0.0532033264576992 103.230969866447 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.76                           0.0646880956471272 82.0977383150955 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.82                           0.0762214869615697 65.7788693043422 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.88                           0.0872694985340253 52.1766940993548 
+! Gamma         0                0                
+! Port Impedance         50               0                
+2.94                           0.0978487760583474 40.2405653659264 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3                              0.108157199879643 29.4086721394192 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.06                           0.118442236172201 19.3514130614628 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.12                           0.128952425051904 9.85671278094564 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.18                           0.139919863700962 0.775775919800576 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.24                           0.151554376164738 -8.00438587785315 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.3                            0.164041244011561 -16.5757208993571 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.36                           0.177538553550642 -25.0173768153939 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.42                           0.192171905930245 -33.4002623946845 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.48                           0.208025023788239 -41.7892840335478 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.54                           0.22512539490554 -50.2438919587921 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.6                            0.243425004221779 -58.8172209947791 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.66                           0.262777834672727 -67.5539780189654 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.72                           0.28291841749149 -76.4872760305048 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.78                           0.303449028326869 -85.6348450620134 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.84                           0.323845872791283 -94.9954359084182 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.9                            0.343494241741399 -104.546643964943 
+! Gamma         0                0                
+! Port Impedance         50               0                
+3.96                           0.361756320389396 -114.24554760822 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.02                           0.3780627315358  -124.033159595549 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.08                           0.392004910021044 -133.842621569104 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.14                           0.4033992104307  -143.60968935487 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.2                            0.412301728222422 -153.283103968577 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.26                           0.418971817455274 -162.832522373676 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.32                           0.423800516700641 -172.252732642782 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.38                           0.427227346246145 178.435773110402 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.44                           0.429664090112238 169.188871366654 
+! Gamma         0                0                
+! Port Impedance         50               0                
+4.5                            0.431433494145105 159.942331109211 
+! Gamma         0                0                
+! Port Impedance         50               0                
