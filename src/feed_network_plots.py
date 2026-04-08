@@ -5,6 +5,9 @@ from scipy.constants import c
 
 def main():
   
+  fs_label = 14
+  fs_title = 16
+  
   line_styles = ['-', '--', ':', '-.']
   line_colors = [f"C{i}" for i in range(20)]
   
@@ -38,14 +41,14 @@ def main():
   s11_std = np.std(s_db_np[:, :, 0 , 0], axis=0)
   s11_max = np.max(s_db_np[:, :, 0 , 0], axis=0)
   
-  fig = plt.figure(figsize=(10, 6))
+  fig = plt.figure(figsize=(6, 5))
   ax = fig.add_subplot(1, 1, 1)
   
   ax.plot(f, s_db_np[:, :, 0 , 0].T, linestyle=line_styles[0], color='black', alpha=0.1)
   ax.plot(f, s11_mean, linestyle=line_styles[0], color=line_colors[0], label='S11 Mean')
   
   ax.plot(f, s_db_np[:, :, 1 , 2].T, linestyle=line_styles[1], color='black', alpha=0.1)
-  ax.plot(f, np.mean(s_db_np[:, :, 1, 2], axis=0), linestyle=line_styles[1], color=line_colors[1], label='Branch Isolation Mean')
+  ax.plot(f, np.mean(s_db_np[:, :, 1, 2], axis=0), linestyle=line_styles[1], color=line_colors[1], label='Intra Branch Isolation Mean')
   # ax.plot(f, np.mean(s_db_np[:, :, 3, 4], axis=0), linestyle=line_styles[1], color=line_colors[1], label='Branch Isolation Mean')
   
   ax.plot(f, s_db_np[:, :, 3 , 2].T, linestyle=line_styles[2], color='black', alpha=0.1)
@@ -55,17 +58,17 @@ def main():
   # ax.plot(f, np.mean(s_db_np[:, :, 3, 1], axis=0), linestyle=line_styles[2], color=line_colors[2], label='Inter Branch Isolation Mean')
   
   ax.set_xlim(2, 4)
-  ax.set_xticks(np.arange(2, 4, 0.5))
-  ax.set_xticks(np.arange(2, 4, 0.1), minor=True)
+  ax.set_xticks(np.arange(2, 4.01, 0.25))
   ax.set_ylim(-40, 0)
   ax.legend()
   ax.grid()
   ax.set_xlabel("Frequency (GHz)")
   ax.set_ylabel("Magnitude (dB)")
-  ax.set_title("Measurement Results")
+  ax.set_title("S-parameters Measurement Results")
   
-  fig = plt.figure(figsize=(10, 6))
-  ax = fig.add_subplot(1, 2, 1)
+  fig = plt.figure(figsize=(6, 5))
+  # ax = fig.add_subplot(1, 2, 1)
+  ax = fig.add_subplot(1, 1, 1)
   
   ax.plot(f, s_db_np[:, :, 0 , 1].T, linestyle=line_styles[0], color=line_colors[0], alpha=0.1)
   ax.plot(f, np.mean(s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[0], color=line_colors[0], label='S21 Mean')
@@ -85,29 +88,28 @@ def main():
   
   ax.legend()
   ax.grid()
-  ax.set_xlabel("Frequency (GHz)")
-  ax.set_ylabel("Magnitude (dB)")
-  ax.set_title("Insertion Losses")
+  ax.set_xlabel("Frequency (GHz)", fontsize=fs_label)
+  ax.set_ylabel("Magnitude (dB)", fontsize=fs_label)
+  ax.set_title("S-parameters Measurement Results", fontsize=fs_title)
   ax.set_xlim(2, 4)
-  ax.set_xticks(np.arange(2, 4, 0.5))
-  ax.set_xticks(np.arange(2, 4, 0.1), minor=True)
+  ax.set_xticks(np.arange(2, 4.01, 0.25))
   ax.set_ylim(-12, -8)
 
-  ax = fig.add_subplot(1, 2, 2)
+  fig = plt.figure(figsize=(6, 5))
+  ax = fig.add_subplot(1, 1, 1)
   
-  ax.plot(f, np.mean(s_db_np[:, :, 0, 1], axis=0) - np.mean(ps_s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[0], color=line_colors[0], label='S21')
-  ax.plot(f, np.mean(s_db_np[:, :, 0, 2], axis=0) - np.mean(ps_s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[1], color=line_colors[1], label='S31')
-  ax.plot(f, np.mean(s_db_np[:, :, 0, 3], axis=0) - np.mean(ps_s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[2], color=line_colors[2], label='S41')
-  ax.plot(f, np.mean(s_db_np[:, :, 0, 4], axis=0) - np.mean(ps_s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[3], color=line_colors[3], label='S51')
+  ax.plot(f, np.mean(s_db_np[:, :, 0, 1], axis=0) - np.mean(ps_s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[0], color=line_colors[0], label='S21 Mean')
+  ax.plot(f, np.mean(s_db_np[:, :, 0, 2], axis=0) - np.mean(ps_s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[1], color=line_colors[1], label='S31 Mean')
+  ax.plot(f, np.mean(s_db_np[:, :, 0, 3], axis=0) - np.mean(ps_s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[2], color=line_colors[2], label='S41 Mean')
+  ax.plot(f, np.mean(s_db_np[:, :, 0, 4], axis=0) - np.mean(ps_s_db_np[:, :, 0, 1], axis=0), linestyle=line_styles[3], color=line_colors[3], label='S51 Mean')
   
   ax.legend()
   ax.grid()
-  ax.set_xlabel("Frequency (GHz)")
-  ax.set_ylabel("Magnitude (dB)")
-  ax.set_title("Mean Insertion Loss - Phase Shifter Loss")
+  ax.set_xlabel("Frequency (GHz)", fontsize=fs_label)
+  ax.set_ylabel("Magnitude (dB)", fontsize=fs_label)
+  ax.set_title("Mean S-parameters compensated for Phase Shifter insertion loss", fontsize=fs_title)
   ax.set_xlim(2, 4)
-  ax.set_xticks(np.arange(2, 4, 0.5))
-  ax.set_xticks(np.arange(2, 4, 0.1), minor=True)
+  ax.set_xticks(np.arange(2, 4.01, 0.25))
   ax.set_ylim(-8, -6)
   
   # fig = plt.figure(figsize=(10, 6))
@@ -126,9 +128,11 @@ def main():
   # ax.set_xticks(np.arange(2, 4, 0.1), minor=True)
   # ax.set_ylim(-40, 0)
   
-  fig = plt.figure(figsize=(10, 6))
+  fig1 = plt.figure(figsize=(6, 5))
+  fig2 = plt.figure(figsize=(6, 5))
   # ax = fig.add_subplot(1, 1, 1)
-  axs = fig.subplots(1, 2)
+  
+  axs = [fig1.add_subplot(1, 1, 1), fig2.add_subplot(1, 1, 1)]
   ax = axs[0]
   
   ref_idx = 5
@@ -163,19 +167,18 @@ def main():
   ax.plot(f, progression_error[show_idx, :, 2].T, linestyle=line_styles[2], color=line_colors[2], alpha=0.1)
 
   mean_progression_error = np.mean(progression_error, axis=0)
-  ax.plot(f, mean_progression_error[:, 0], linestyle=line_styles[0], color=line_colors[0], label='Mean phase difference 1-2')
-  ax.plot(f, mean_progression_error[:, 1], linestyle=line_styles[1], color=line_colors[1], label='Mean phase difference 2-3')
-  ax.plot(f, mean_progression_error[:, 2], linestyle=line_styles[2], color=line_colors[2], label='Mean phase difference 3-4')  
+  ax.plot(f, mean_progression_error[:, 0], linestyle=line_styles[0], color=line_colors[0], label='Mean phase difference error 1-2')
+  ax.plot(f, mean_progression_error[:, 1], linestyle=line_styles[1], color=line_colors[1], label='Mean phase difference error 2-3')
+  ax.plot(f, mean_progression_error[:, 2], linestyle=line_styles[2], color=line_colors[2], label='Mean phase difference error 3-4')  
   
   ax.legend()
   ax.set_xlim(2, 4)
-  ax.set_xticks(np.arange(2, 4, 0.5))
-  ax.set_xticks(np.arange(2, 4, 0.1), minor=True)
+  ax.set_xticks(np.arange(2, 4.01, 0.25))
   ax.grid()
   ax.set_ylim(0, 10)
-  ax.set_xlabel("Frequency (GHz)")
-  ax.set_ylabel("Phase (degrees)")
-  ax.set_title("RMS Phase Progression Error Between Ports")
+  ax.set_xlabel("Frequency (GHz)", fontsize=fs_label)
+  ax.set_ylabel("Phase (degrees)", fontsize=fs_label)
+  ax.set_title("RMS Phase Progression Error", fontsize=fs_title)
   
   ax = axs[1]
   
@@ -199,13 +202,12 @@ def main():
   
   ax.legend()
   ax.set_xlim(2, 4)
-  ax.set_xticks(np.arange(2, 4, 0.5))
-  ax.set_xticks(np.arange(2, 4, 0.1), minor=True)
+  ax.set_xticks(np.arange(2, 4.01, 0.25))
   ax.grid()
   ax.set_ylim(0, 10)
-  ax.set_xlabel("Frequency (GHz)")
-  ax.set_ylabel("Phase (degrees)")
-  ax.set_title("Phase Shifter RMS Phase Error")
+  ax.set_xlabel("Frequency (GHz)", fontsize=fs_label)
+  ax.set_ylabel("Phase (degrees)", fontsize=fs_label)
+  ax.set_title("Phase Shifter RMS Phase Error", fontsize=fs_title)
   plt.show()
     
   

@@ -6,6 +6,7 @@ def main():
   bits = 4
   lsb_shift = 2 * np.pi / (2 ** bits)
   line_styles = ['-', '--', ':', '-.']
+  markers = ['o', 's', 'x', '^']
   line_colors = [f"C{i}" for i in range(20)]
   # phase_progression = np.linspace(-np.pi, np.pi, 500)
   phase_progression = np.arange(0, 2**bits) * lsb_shift
@@ -24,7 +25,7 @@ def main():
   
   for i, d in enumerate(ds):
     beam_angles = np.degrees(np.arcsin(phase_progression / (2 * np.pi * d)))
-    ax.plot(phase_progression_deg, beam_angles, label=f'd={d} λ max steer angle={beam_angles[-1]:.1f}°', marker='o', color=line_colors[i], linestyle=line_styles[i])
+    ax.plot(phase_progression_deg, beam_angles, label=f'd={d} λ max steer angle={beam_angles[-1]:.1f}°', marker=markers[i], color=line_colors[i], linestyle=line_styles[i])
     ax.hlines(beam_angles[0], phase_progression_deg[0] * 1.1, phase_progression_deg[-1] * 1.1, color=line_colors[i], linestyles=line_styles[-1], linewidth=0.75)
     ax.hlines(beam_angles[-1], phase_progression_deg[0] * 1.1, phase_progression_deg[-1] * 1.1, color=line_colors[i], linestyles=line_styles[-1], linewidth=0.75)
   

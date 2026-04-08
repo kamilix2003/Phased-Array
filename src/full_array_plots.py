@@ -6,6 +6,10 @@ from pattern_import import RadiationPattern
 from pattern_measurements import HPBW
 
 def main():
+  
+  fs_label = 14
+  fs_title = 16
+  
   base_path = "src/full_measurements/ant_final/"
   extension = ".txt"
   L_pattern_paths = [
@@ -91,9 +95,9 @@ def main():
   ax_err.set_ylabel("Error (degrees)")
   ax_err.legend()
   ax.plot(progression, expected_beam_directions, marker='x', linestyle='', label='Expected Beam Directions')
-  ax.set_xlabel("Progression (degrees)")
-  ax.set_ylabel("Beam Direction (degrees)")
-  ax.set_title("Beam Direction vs. Phase Progression")
+  ax.set_xlabel("Progression (degrees)", fontsize=fs_label)
+  ax.set_ylabel("Beam Direction (degrees)", fontsize=fs_label)
+  ax.set_title("Beam Direction vs. Phase Progression", fontsize=fs_title)
   ax.legend()
   ax.grid(True)
   ax.set_ylim(-60, 60)
@@ -106,9 +110,9 @@ def main():
   progression = np.arange(-5, 6) * 22.5
   ax.plot(progression, hpbw_values, marker='o', linestyle='', label='Measured HPBW')
   ax.plot(progression, expected_hpbw, marker='x', linestyle='', label='Expected HPBW')
-  ax.set_xlabel("Progression (degrees)")
-  ax.set_ylabel("Beam width (degrees)")
-  ax.set_title("Beam width vs. Phase Progression")
+  ax.set_xlabel("Progression (degrees)", fontsize=fs_label)
+  ax.set_ylabel("Beam width (degrees)", fontsize=fs_label)
+  ax.set_title("Beam width vs. Phase Progression", fontsize=fs_title)
   ax.legend()
   ax.grid(True)
   ax.set_xticks(progression)
@@ -117,8 +121,8 @@ def main():
   ax = fig.add_subplot(1, 1, 1)
   
   ax.plot(progression, sll_values, marker='o', linestyle='', label='Measured SLL')
-  ax.set_xlabel("Progression (degrees)")
-  ax.set_ylabel("Side Lobe Level (dB)")
+  ax.set_xlabel("Progression (degrees)", fontsize=fs_label)
+  ax.set_ylabel("Side Lobe Level (dB)", fontsize=fs_label)
   
   fig = plt.figure(figsize=(6, 5))
   ax = fig.add_subplot(1, 1, 1)
@@ -138,9 +142,9 @@ def main():
   ax.set_ylim(-30, 3)
   ax.grid()
   ax.set_xticks(np.arange(-90, 91, 15))
-  ax.set_title(f"Normalized radiation pattern of single antenna element")
-  ax.set_xlabel("Angle (degrees)")
-  ax.set_ylabel("Magnitude (dB)")
+  ax.set_title(f"Normalized radiation pattern of single antenna element", fontsize=fs_title)
+  ax.set_xlabel("Angle (degrees)", fontsize=fs_label)
+  ax.set_ylabel("Magnitude (dB)", fontsize=fs_label)
   ax.legend()
   
   path_idx = [5, 8]
@@ -168,9 +172,9 @@ def main():
     ax.set_ylim(-30, 3)
     ax.grid()
     ax.set_xticks(np.arange(-90, 91, 15))
-    ax.set_title(f"Normalized radiation pattern, Progression {(i - 5) * 22.5} degrees")
-    ax.set_xlabel("Angle (degrees)")
-    ax.set_ylabel("Magnitude (dB)")
+    ax.set_title(f"Normalized radiation pattern, Progression {(i - 5) * 22.5} degrees", fontsize=fs_title)
+    ax.set_xlabel("Angle (degrees)", fontsize=fs_label)
+    ax.set_ylabel("Magnitude (dB)", fontsize=fs_label)
     ax.legend() 
       
   appendix_paths = [
@@ -186,8 +190,10 @@ def main():
     "15100500"
   ]
   progs = np.arange(-5, 0).tolist() + np.arange(1, 6).tolist()
-  fig = plt.figure(figsize=(9, 12))
-  axs = fig.subplots(5, 2, sharex=True, sharey=True).T.flatten()
+  fig1 = plt.figure(figsize=(12, 12))
+  fig2 = plt.figure(figsize=(12, 12))
+  axs = fig1.subplots(5, 1, sharex=True, sharey=True).flatten()
+  axs = np.append(axs, fig2.subplots(5, 1, sharex=True, sharey=True).flatten())
   beam_directions = []
   for i, pattern_path in enumerate(appendix_paths):
     full_path = base_path + pattern_path + extension
@@ -202,14 +208,21 @@ def main():
       beam_dir = theta[np.argmax(current_pattern  + 2*np.cos(theta / 5))]  # adding a small progression to shift the main lobe direction
       beam_directions.append(np.degrees(beam_dir))
       axs[i].plot(np.degrees(theta), current_pattern, linestyle=line_styles[0], color=line_colors[i])
-      axs[i].hlines(-3, -90, 90, colors='gray', linestyles='dashed', linewidth=0.5)
+      axs[i].hlines(-3, -180, 180, colors='gray', linestyles='dashed', linewidth=0.5)
       
-    axs[i].set_xlim(-90, 90)
+    axs[i].set_xlim(-180, 180)
     axs[i].set_ylim(-30, 3)
     axs[i].grid()
-    axs[i].set_xticks(np.arange(-90, 91, 15))
-    axs[i].set_title(f"Progression {progs[i] * 22.5} degrees, beam angle {beam_directions[i]:.2f}°")
-      
+    axs[i].set_xticks(np.arange(-180, 181, 15))
+    axs[i].set_title(f"Progression {progs[i] * 22.5} degrees, beam angle {beam_directions[i]:.2f}degrees")
+    # axs[i].set_xlabel("Angle (degrees)")
+    axs[i].set_ylabel("Magnitude (dB)")
+  
+  axs[4].set_xlabel("Angle (degrees)")
+  axs[-1].set_xlabel("Angle (degrees)")
+  fig1.savefig("prog1.svg")
+  fig2.savefig("prog2.svg")
+    
   plt.show()
     
 if __name__ == "__main__":

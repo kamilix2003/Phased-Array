@@ -9,6 +9,9 @@ from pattern_measurements import (main_lobe_direction, get_lobe, FNBW, SLL)
 
 def main():    
   
+  fs_label = 14
+  fs_title = 16
+  
   Ns = np.array([2, 4, 6])
   n_bits = 4
   lsb_shift = 2 * np.pi / (2 ** n_bits)
@@ -22,11 +25,16 @@ def main():
   ep = gen_patch_pattern(theta)
   ep_db = 20 * np.log10(ep / np.max(ep))
   
-  fig = plt.figure(figsize=(12, 5))
+  fig1 = plt.figure(figsize=(6, 5))
+  fig2 = plt.figure(figsize=(6, 5))
   cols = 2
-  # axs = fig.subplots(beta.shape[0] // cols, cols, sharex=True, subplot_kw={"projection": "polar"})
-  axs = fig.subplots(Ns.shape[0] // cols, cols)
-  axs = axs.flatten()
+  # # axs = fig.subplots(beta.shape[0] // cols, cols, sharex=True, subplot_kw={"projection": "polar"})
+  # axs = fig.subplots(Ns.shape[0] // cols, cols)
+  # axs = axs.flatten()
+  
+  axs = [None] * 2
+  axs[0] = fig1.add_subplot(1, 1, 1)
+  axs[1] = fig2.add_subplot(1, 1, 1)
   
   for i, N in enumerate(Ns):
     weights = np.ones(N)
@@ -51,16 +59,16 @@ def main():
     for b in range(beta.shape[0]):
       ax = axs[b]
       
-      ax.plot((theta_deg), ap_db[b, :], label=f"N = {N}, spacing = {d[1] / (c/f):.2f} λ", linestyle=line_styles[0], color=line_colors[i])
-      ax.legend(loc='lower right', fontsize='small')
+      ax.plot((theta_deg), ap_db[b, :], label=f"N = {N}, spacing = {d[1] / (c/f):.2f} λ", linestyle=line_styles[i], color=line_colors[i])
+      ax.legend(loc='lower right')
       ax.set_ylim(-30, 3)
       ax.set_xlim(-90, 90)
-      ax.set_ylabel("Magnitude (dB)")
-      ax.set_xlabel("Angle (degrees)")
+      ax.set_ylabel("Magnitude (dB)", fontsize=fs_label)
+      ax.set_xlabel("Angle (degrees)", fontsize=fs_label)
       ax.grid()
       
-  axs[0].set_title(f'Array factor, progression = {0} degrees') #, control bytes: {[f"0x{int(s):01x}" for s in (beta[b, :] // lsb_shift)%16]}')
-  axs[1].set_title(f'Array factor, progression = {np.degrees(progression * lsb_shift)} degrees') #, control bytes: {[f"0x{int(s):01x}" for s in (beta[b, :] // lsb_shift)%16]}')
+  axs[0].set_title(f'Array factor, progression = {0} degrees', fontsize=fs_title) #, control bytes: {[f"0x{int(s):01x}" for s in (beta[b, :] // lsb_shift)%16]}')
+  axs[1].set_title(f'Array factor, progression = {np.degrees(progression * lsb_shift)} degrees', fontsize=fs_title) #, control bytes: {[f"0x{int(s):01x}" for s in (beta[b, :] // lsb_shift)%16]}')
   
   plt.show()
       
